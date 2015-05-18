@@ -6,19 +6,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.StringTokenizer;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 import patmob.data.ops.ProxyCredentialsDialog;
 
@@ -30,12 +35,7 @@ public class PatbaseRestClient {
     static DefaultHttpClient httpclient;
     static String userID, password;
     public static boolean isInitialized = false;
-    public static final String 
-            PATBASE_API_URL = "https://www.patbase.com/rest/api.php?",
-            LOGIN_URL_1 = "method=login&userid=",
-//            + "piotr.masiakowski@sanofi.com"
-            LOGIN_URL_2 = "&password=";
-//            + "ip4638";
+    static URIBuilder uriBuilder;
             
     public static String initialize(String patmobProxy, 
             String patbaseUserId, String patbasePassword) {
@@ -59,8 +59,14 @@ public class PatbaseRestClient {
                     ConnRoutePNames.DEFAULT_PROXY, proxy);
         }
         
-        HttpGet httpGet = new HttpGet(PATBASE_API_URL +
-                LOGIN_URL_1 + userID + LOGIN_URL_2 + password);
+        uriBuilder = new URIBuilder()
+                .setScheme("https")
+                .setHost("www.patbase.com")
+                .setPath("/rest/api.php");
+        
+        HttpGet httpGet = new HttpGet(getUri("login",
+                new BasicNameValuePair("userid", userID),
+                new BasicNameValuePair("password", password)));
         try {
             HttpResponse httpResponse = httpclient.execute(httpGet);
             patbaseConnStatus = httpResponse.getStatusLine().toString();
@@ -86,12 +92,20 @@ public class PatbaseRestClient {
     }
     
     private static String handleInitResponse(HttpResponse httpResponse) {
-        String iRes = "hello";
-        isInitialized = true;
-        
-//        Header[] headers = httpResponse.getAllHeaders();
-//        for (Header h : headers) System.out.println(h.getName() + ": " + h.getValue());
+        String status = "Null response";
+        JSONObject jOb = getResponseData(httpResponse);
+        if (jOb!=null) {
+            if (jOb.has("LOGIN_TO_API") && 
+                    jOb.getString("LOGIN_TO_API").equals("OK")) {
+                isInitialized = true;
+            }
+            status = jOb.toString();
+        }
+        return status;
+
         /*
+        Header[] headers = httpResponse.getAllHeaders();
+        for (Header h : headers) System.out.println(h.getName() + ": " + h.getValue());
 Cache-Control: no-cache, must-revalidate
 Content-Type: application/json; charset=utf-8
 Expires: Sat, 26 Jul 1997 05:00:00 GMT
@@ -109,13 +123,14 @@ Set-Cookie: nlbi_9867=TVo5XBa7yhRY+I+irjd4awAAAABKSd0W/Y1Nem4/yzIHP3rG; path=/; 
 Set-Cookie: incap_ses_221_9867=0mplUaTn0RiS52Sk8iYRA3aETlUAAAAAmnjkq4B7yPhR26fL1RIKGQ==; path=/; Domain=.patbase.com
 X-Iinfo: 10-176778394-176778505 NNNN CT(82 249 0) RT(1431209076890 201) q(0 0 4 0) r(4 11) U5
 X-CDN: Incapsula        
-        */
-//        Header header = httpResponse.getFirstHeader("Set-Cookie");
-//        System.out.println("Set-Cookie Header: " + header.getValue());
         // org.apache.http.client.protocol.ResponseProcessCookies
         // Response interceptor that populates the current CookieStore 
         // with data contained in response cookies received in the given the HTTP response.
-                
+        */
+    }
+    
+    public static JSONObject getResponseData(HttpResponse httpResponse) {
+        JSONObject jOb = null;
         HttpEntity resultEntity = httpResponse.getEntity();
         if (resultEntity!=null) {
             try {
@@ -126,16 +141,17 @@ X-CDN: Incapsula
                     String line;
                     while ((line=br.readLine())!=null) {
                         sb.append(line);
-//                        System.out.println("HttpEntity: " + line);
                     }
-                    iRes = sb.toString();
+                    String s = sb.toString();
+                    //PatBase crap (?)
+                    s = s.substring(s.indexOf("{"), s.length());
+                    jOb = new JSONObject(s);
                 }
             } catch (Exception x) {
-                System.out.println(
-                        "PatbaseRestClient.handleInitResponse: " + x);
+                System.out.println("PatbaseRestClient.getResponseData: " + x);
             }
-        }
-        return iRes;
+        }        
+        return jOb;
     }
     
     /**
@@ -152,42 +168,46 @@ X-CDN: Incapsula
         } catch (FileNotFoundException ex) {
             System.out.println("***setErr: " + ex);
         }
-//        System.out.println(
-//                "patbaseConnStatus: " + 
-//                PatbaseRestClient.initialize(
-//                        null, "piotr.masiakowski@sanofi.com", "ip4638"));
-        String s = PatbaseRestClient.initialize(
-                null, "piotr.masiakowski@sanofi.com", "ip4638");
-        // ***PatBase CRAP***
-        // org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
-        s = s.substring(s.indexOf("{"), s.length());
-        printJson(s);
+        
+        System.out.println(
+                "patbaseConnStatus: " + initialize(
+                        null, "piotr.masiakowski@sanofi.com", "ip4638"));
         
         try {
-            HttpGet httpGet = new HttpGet("https://www.patbase.com/rest/api.php?method=query&query=pcsk9");
-            System.out.println("    >>>> EXECUTING: " + httpGet);
+            HttpGet httpGet = new HttpGet(getUri("getweek"));
             HttpResponse httpResponse = httpclient.execute(httpGet);
-            s = PatbaseRestClient.handleInitResponse(httpResponse);
-            s = s.substring(s.indexOf("{"), s.length());
-            printJson(s);
+            System.out.println("getweek: " + getResponseData(httpResponse));
             
-            JSONObject jOb = new JSONObject(s);
-            String qKey = jOb.getString("QueryKey");
-            String getURL = "https://www.patbase.com/rest/api.php?method=searchresultsBIB&querykey=" + 
-                    qKey + "&from=1&to=5";
-            getURL = getURL.replace("{", "%7b").replace("}", "%7d");
-            httpGet = new HttpGet(getURL);
-            System.out.println("    >>>> EXECUTING: " + httpGet);
+            String query = "((UE=1520US or UE=1520EP or UE=1520WO) AND TAC=BTK)";
+            httpGet = new HttpGet(getUri("query", 
+                    new BasicNameValuePair("query", query)));
             httpResponse = httpclient.execute(httpGet);
-            s = PatbaseRestClient.handleInitResponse(httpResponse);
-            s = s.substring(s.indexOf("{"), s.length());
-            printJson(s);
+            JSONObject jOb = getResponseData(httpResponse);
+            System.out.println("query: " + jOb.toString(2));            
+            
+            String qKey = jOb.getString("QueryKey");
+            
+            httpGet = new HttpGet(getUri("searchresultsBIB",
+                    new BasicNameValuePair("querykey", qKey),
+                    new BasicNameValuePair("from", "1"),
+                    new BasicNameValuePair("to", "10")));
+            httpResponse = httpclient.execute(httpGet);
+            jOb = getResponseData(httpResponse);
+            System.out.println("searchresultsBIB: " + jOb.toString(2));
         } catch (Exception x) {System.out.println("main: " + x);}
     }
     
-    static void printJson(String json) {
-        JSONObject jOb = new JSONObject(json);
-        System.out.println(jOb.toString(2));
+    public static URI getUri(String method, NameValuePair... params) {
+        URI uri = null;
+        uriBuilder.setParameter("method", method);
+        for (NameValuePair param : params) {
+            uriBuilder.setParameter(param.getName(), param.getValue());
+        }
+        try {
+            uri = uriBuilder.build();
+        } catch (URISyntaxException ex) {
+            System.out.println("PatbaseRestClient.getUri: " + ex);
+        }
+        return uri;
     }
-    
 }
