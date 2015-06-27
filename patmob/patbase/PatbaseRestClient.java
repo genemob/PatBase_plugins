@@ -155,6 +155,42 @@ X-CDN: Incapsula
     }
     
     /**
+     * Run the query, get the QueryKey, and retrieve desired number of hits.
+     * @param query
+     * @param from
+     * @param to - if null, retrieve ALL hits
+     * @return 
+     */
+    public static JSONObject query(String query, String from, String to) {
+        JSONObject jOb = null;
+        try {
+            HttpGet httpGet = new HttpGet(getUri("query", 
+                    new BasicNameValuePair("query", query)));
+            HttpResponse httpResponse = httpclient.execute(httpGet);
+            jOb = getResponseData(httpResponse);
+            
+            System.out.println(jOb.toString());
+            
+            String qKey = jOb.getString("QueryKey");
+            if (to==null) {
+                to = jOb.getString("Results");
+            }
+            
+            httpGet = new HttpGet(getUri("searchresults",
+                    new BasicNameValuePair("querykey", qKey),
+                    new BasicNameValuePair("from", from),
+                    new BasicNameValuePair("to", to),
+                    new BasicNameValuePair("sortorder", "2")));                 //priority date desc
+            httpResponse = httpclient.execute(httpGet);
+            jOb = getResponseData(httpResponse);
+            
+        } catch (Exception x) {
+            System.out.println("PatbaseRestClient.query: " + x);
+        }
+        return jOb;
+    }
+    
+    /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
@@ -173,28 +209,8 @@ X-CDN: Incapsula
                 "patbaseConnStatus: " + initialize(
                         null, "piotr.masiakowski@sanofi.com", "ip4638"));
         
-        try {
-            HttpGet httpGet = new HttpGet(getUri("getweek"));
-            HttpResponse httpResponse = httpclient.execute(httpGet);
-            System.out.println("getweek: " + getResponseData(httpResponse));
-            
-            String query = "((UE=1520US or UE=1520EP or UE=1520WO) AND TAC=BTK)";
-            httpGet = new HttpGet(getUri("query", 
-                    new BasicNameValuePair("query", query)));
-            httpResponse = httpclient.execute(httpGet);
-            JSONObject jOb = getResponseData(httpResponse);
-            System.out.println("query: " + jOb.toString(2));            
-            
-            String qKey = jOb.getString("QueryKey");
-            
-            httpGet = new HttpGet(getUri("searchresultsBIB",
-                    new BasicNameValuePair("querykey", qKey),
-                    new BasicNameValuePair("from", "1"),
-                    new BasicNameValuePair("to", "10")));
-            httpResponse = httpclient.execute(httpGet);
-            jOb = getResponseData(httpResponse);
-            System.out.println("searchresultsBIB: " + jOb.toString(2));
-        } catch (Exception x) {System.out.println("main: " + x);}
+        String query = "UE=1522 and tac=(FGF21)";
+        System.out.println(query(query, "1", null).toString(2));
     }
     
     public static URI getUri(String method, NameValuePair... params) {
