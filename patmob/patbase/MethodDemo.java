@@ -24,10 +24,10 @@ public class MethodDemo extends javax.swing.JFrame {
     /**
      * Creates new form MethodDemo
      */
-    public MethodDemo() {
+    public MethodDemo(String patmobProxy) {
         initComponents();
         jTable1.getColumn("Parameter").setMaxWidth(100);
-        jTextArea1.setText(PatbaseRestClient.initialize(null, 
+        jTextArea1.setText(PatbaseRestClient.initialize(patmobProxy, 
                 "piotr.masiakowski@sanofi.com", "ip4638"));
     }
 
@@ -48,7 +48,7 @@ public class MethodDemo extends javax.swing.JFrame {
         jScrollPane3 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("PatBase REST API Method Demo");
 
         jList1.setModel(new javax.swing.AbstractListModel() {
@@ -275,7 +275,7 @@ public class MethodDemo extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MethodDemo().setVisible(true);
+                new MethodDemo(null).setVisible(true);
             }
         });
     }
