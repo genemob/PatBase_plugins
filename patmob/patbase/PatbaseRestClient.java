@@ -35,9 +35,12 @@ import patmob.data.ops.ProxyCredentialsDialog;
 public class PatbaseRestClient {
     static DefaultHttpClient httpclient;
     static String userID, password;
-    public static boolean isInitialized = false;
     static URIBuilder uriBuilder;
-            
+    static String scheme = "https",     //params for uriBuilder
+            host = "www.patbase.com",
+            path = "/rest/api.php";
+    public static boolean isInitialized = false;
+           
     public static String initialize(String patmobProxy, 
             String patbaseUserId, String patbasePassword) {
         String patbaseConnStatus;
@@ -63,9 +66,9 @@ public class PatbaseRestClient {
         }
         
         uriBuilder = new URIBuilder()
-                .setScheme("https")
-                .setHost("www.patbase.com")
-                .setPath("/rest/api.php");
+                .setScheme(scheme)
+                .setHost(host)
+                .setPath(path);
         
         HttpGet httpGet = new HttpGet(getUri("login",
                 new BasicNameValuePair("userid", userID),
@@ -106,6 +109,7 @@ public class PatbaseRestClient {
         }
         return status;
 
+// <editor-fold defaultstate="collapsed" desc="PatBase cookies">
         /*
         Header[] headers = httpResponse.getAllHeaders();
         for (Header h : headers) System.out.println(h.getName() + ": " + h.getValue());
@@ -129,7 +133,7 @@ X-CDN: Incapsula
         // org.apache.http.client.protocol.ResponseProcessCookies
         // Response interceptor that populates the current CookieStore 
         // with data contained in response cookies received in the given the HTTP response.
-        */
+        */// </editor-fold>
     }
     
     public static JSONObject getResponseData(HttpResponse httpResponse) {
@@ -157,41 +161,21 @@ X-CDN: Incapsula
         return jOb;
     }
     
-    /**
-     * Run the query, get the QueryKey, and retrieve desired number of hits.
-     * @param query
-     * @param from
-     * @param to - if null, retrieve ALL hits
-     * @return 
-     */
-    public static JSONObject query(String query, String from, String to) {
+    public static JSONObject runMethod(String method, NameValuePair... params) {
         JSONObject jOb = null;
         try {
-            HttpGet httpGet = new HttpGet(getUri("query", 
-                    new BasicNameValuePair("query", query)));
+            URI uri = getUri(method, params);
+            System.out.println(uri.toString());
+            
+            HttpGet httpGet = new HttpGet(uri);
             HttpResponse httpResponse = httpclient.execute(httpGet);
             jOb = getResponseData(httpResponse);
-            
-            System.out.println(jOb.toString());
-            
-            String qKey = jOb.getString("QueryKey");
-            if (to==null) {
-                to = jOb.getString("Results");
-            }
-            
-            httpGet = new HttpGet(getUri("searchresults",
-                    new BasicNameValuePair("querykey", qKey),
-                    new BasicNameValuePair("from", from),
-                    new BasicNameValuePair("to", to),
-                    new BasicNameValuePair("sortorder", "2")));                 //priority date desc
-            httpResponse = httpclient.execute(httpGet);
-            jOb = getResponseData(httpResponse);
-            
-        } catch (Exception x) {
-            System.out.println("PatbaseRestClient.query: " + x);
+        } catch (Exception ex) {
+            System.out.println("runMethod: " + ex);
         }
         return jOb;
     }
+    
     
     /**
      * @param args the command line arguments
@@ -213,14 +197,16 @@ X-CDN: Incapsula
                         null, "piotr.masiakowski@sanofi.com", "ip4638"));
         
         String query = "UE=1522 and tac=(FGF21)";
-        System.out.println(query(query, "1", null).toString(2));
+        System.out.println(PatbaseRestApi.query(query, "1", null).toString(2));
     }
     
     public static URI getUri(String method, NameValuePair... params) {
         URI uri = null;
-        uriBuilder.setParameter("method", method);
-        for (NameValuePair param : params) {
-            uriBuilder.setParameter(param.getName(), param.getValue());
+        uriBuilder.removeQuery().setParameter("method", method);
+        if (params!=null) {
+            for (NameValuePair param : params) {
+                uriBuilder.setParameter(param.getName(), param.getValue());
+            }
         }
         try {
             uri = uriBuilder.build();
