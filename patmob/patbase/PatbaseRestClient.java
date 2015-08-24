@@ -164,10 +164,10 @@ X-CDN: Incapsula
     public static JSONObject runMethod(String method, NameValuePair... params) {
         JSONObject jOb = null;
         try {
-            URI uri = getUri(method, params);
-            System.out.println(uri.toString());
+//            URI uri = getUri(method, params);
+//            System.out.println(uri.toString());
             
-            HttpGet httpGet = new HttpGet(uri);
+            HttpGet httpGet = new HttpGet(getUri(method, params));
             HttpResponse httpResponse = httpclient.execute(httpGet);
             jOb = getResponseData(httpResponse);
         } catch (Exception ex) {
@@ -197,7 +197,8 @@ X-CDN: Incapsula
                         null, "piotr.masiakowski@sanofi.com", "ip4638"));
         
         String query = "UE=1522 and tac=(FGF21)";
-        System.out.println(PatbaseRestApi.query(query, "1", null).toString(2));
+        System.out.println(PatbaseRestApi.query(
+                query, PatbaseRestApi.SEARCHRESULTS, "1", null, null).toString(2));
     }
     
     public static URI getUri(String method, NameValuePair... params) {

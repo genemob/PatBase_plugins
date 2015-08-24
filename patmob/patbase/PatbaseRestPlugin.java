@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.table.DefaultTableModel;
 import org.apache.http.NameValuePair;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import patmob.core.PatmobPlugin;
 import patmob.core.TreeBranchEditor_2;
@@ -34,7 +35,12 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     boolean stopAlerts = false;
     //key = family name; value = projects which have this family
     private HashMap<String,String> familyProjectMap;
-    private PatentCollectionMap allFamilies;
+//    private PatentCollectionMap allFamilies;
+//    private HashMap<String, JSONObject> allProjects;
+    
+    
+    
+    private JSONObject allFamilies;
     
     @Override
     public String getName() {
@@ -51,7 +57,9 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             PatBaseQueryResultFormat format) {
         // 20250209: init these collections for each run
         familyProjectMap = new HashMap<>();                 
-        allFamilies = new PatentCollectionMap();
+//        allFamilies = new PatentCollectionMap();
+//        allProjects = new HashMap<>();
+        allFamilies = new JSONObject().put("Families", new JSONArray());
         
         ArrayList<String> jobs = new ArrayList<>();
         try {
@@ -80,7 +88,8 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     private class AlertRunner implements Runnable {
         String[] allQueries;
         String updateCmd;
-        PatentCollectionList alertResults;
+//        PatentCollectionList alertResults;
+        //REMOVE?
         PatBaseQueryResultFormat alertFormat;
         
         public AlertRunner(String[] queries, String updateString,
@@ -88,45 +97,86 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             allQueries = queries;
             updateCmd = updateString;
             //NOT USED
-            alertResults = results;
+//            alertResults = results;
             alertFormat = format;
         }
         
         @Override
         public void run() {
-//            for (int i=0; i<allQueries.length; i++) {
-//                if (stopAlerts) {
-//                    break;
-//                }
-//                String[] myJob = allQueries[i].split("\t");
-//                String projectName = myJob[0],
-//                        fullQuery = "(" + myJob[1] + ") and (" + updateCmd +")";
-//                frame.appendLogText("\nSubmitting " + projectName + "... ");
+            for (int i=0; i<allQueries.length; i++) {
+                if (stopAlerts) {
+                    break;
+                }
+                String[] myJob = allQueries[i].split("\t");
+                String projectName = myJob[0],
+                        fullQuery = "(" + myJob[1] + ") and (" + updateCmd +")";
+                frame.appendLogText("\nSubmitting " + projectName + "... ");
 //                PatentTreeNode projectNode = PatBaseAPI.query(
 //                        fullQuery, "1", "100", "-1", alertFormat);
+                JSONObject projectResults = PatbaseRestApi.query(
+                        fullQuery, PatbaseRestApi.SEARCHRESULTSBIB, "1", "100", projectName);
+                
 //                String summary = projectNode.getDescription();
 //                frame.appendLogText(summary.substring(
 //                        0, summary.indexOf("for query")));
-//                if (projectNode.size()>0) {                    
-//                    // store families in familyProjectMap
-//                    Iterator<PatentTreeNode> projectFamilies = 
-//                            projectNode.getChildren().iterator();
-//                    while (projectFamilies.hasNext()) {
-//                        PatentTreeNode family = projectFamilies.next();
-//                        String famName = family.getName();
-//                        if (familyProjectMap.containsKey(famName)) {
-//                            String familyProjects = familyProjectMap.get(famName);
-//                            familyProjectMap.put(famName, 
-//                                    familyProjects + ", " + projectName);
-//                        } else {
-//                            familyProjectMap.put(famName, projectName);
-//                            allFamilies.addChild(family);
+                if (projectResults!=null) {
+                    frame.appendLogText(projectResults.getString("Results") + " records");
+                    
+                    //FOR NOW DON'T BOTHER WITH DUPS...
+//                    allProjects.put(projectName, projectResults);
+                    
+                    JSONArray proFams = projectResults.getJSONArray("Families");
+                    for (int k=0; k<proFams.length(); k++) {
+                        JSONObject proFam = proFams.getJSONObject(k);
+                        String famName = proFam.getString("Family");
+                        if (familyProjectMap.containsKey(famName)) {
+                            String famProjects = familyProjectMap.get(famName);
+                            familyProjectMap.put(famName,
+                                    famProjects + ", " + projectName);
+                        } else {
+                            familyProjectMap.put(famName, projectName);
+                            allFamilies.getJSONArray("Families").put(proFam);
+                        }
+                    }
+//                    if (projectNode.size()>0) {                    
+//                        // store families in familyProjectMap
+//                        Iterator<PatentTreeNode> projectFamilies = 
+//                                projectNode.getChildren().iterator();
+//                        while (projectFamilies.hasNext()) {
+//                            PatentTreeNode family = projectFamilies.next();
+//                            String famName = family.getName();
+//                            if (familyProjectMap.containsKey(famName)) {
+//                                String familyProjects = familyProjectMap.get(famName);
+//                                familyProjectMap.put(famName, 
+//                                        familyProjects + ", " + projectName);
+//                            } else {
+//                                familyProjectMap.put(famName, projectName);
+//                                allFamilies.addChild(family);
+//                            }
 //                        }
 //                    }
+                } else {
+                    frame.appendLogText("No records");
+                }
+            }
+            
+            // re-create projects from familyProjectMap and make allFamilies
+//            for (JSONObject project : allProjects.values()) {
+//System.out.println("ProjectName: " + project.get("ProjectName"));
+//                JSONArray pFams = project.getJSONArray("Families");
+//                for (int i=0; i<pFams.length(); i++) {
+//                    JSONObject fam = pFams.getJSONObject(i);
+//                    fam.put("MemberCount", project.get("ProjectName"));
+//                    allFamilies.getJSONArray("Families").put(fam);
+//
 //                }
 //            }
-//            
-//            // re-create projects from familyProjectMap and make allProjects
+            
+            for (int m=0; m<allFamilies.getJSONArray("Families").length(); m++){
+                JSONObject o = allFamilies.getJSONArray("Families").getJSONObject(m);
+                o.put("ProjectName", familyProjectMap.get(o.getString("Family")));
+            }
+           
 //            PatentCollectionMap allProjects = new PatentCollectionMap("PMap");
 //            Iterator<Entry<String,String>> iterator = 
 //                    familyProjectMap.entrySet().iterator();
@@ -144,32 +194,52 @@ public class PatbaseRestPlugin implements PatmobPlugin {
 //                    allProjects.addChild(project);
 //                }
 //            }
-//            
-//            stopAlerts = false;
+            
+            stopAlerts = false;
 //            new TreeBranchEditor_2(
 //                    allProjects, coreAccess.getController()).setVisible(true);
-        }
-    }
-    
-    // GUI format
-    public void runQuery(String cmd, String fromRec, String toRec, String sort,
-            PatBaseQueryResultFormat format) {
-        final Object[][] obData = PatbaseRestApi.tableQuery(cmd, fromRec, toRec);
-        final Object[] colNames = new Object[]{"Select","Title","ProbableAssignee",
-            "EarliestPubDate","PatentNumber","Abstract"};
+            
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new TestTable(new DefaultTableModel(obData, colNames){
-                    @Override
-                    public Class getColumnClass(int c) {
-                        return getValueAt(0, c).getClass();
-                    }
-                }).setVisible(true);
+                new PatbaseTableFrame(allFamilies).setVisible(true);
             }
         });
-        
+            
+        }
     }
+    
+    public void runQuery(String cmd, String fromRec, String toRec, String sort,
+            PatBaseQueryResultFormat format) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new PatbaseTableFrame(PatbaseRestApi.query(
+                        cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, null))
+                        .setVisible(true);
+            }
+        });
+    }    
+    
+//    // GUI format
+//    public void runQuery(String cmd, String fromRec, String toRec, String sort,
+//            PatBaseQueryResultFormat format) {
+//        final Object[][] obData = PatbaseRestApi.tableQuery(cmd, fromRec, toRec);
+//        final Object[] colNames = new Object[]{"Select","Title","ProbableAssignee",
+//            "EarliestPubDate","PatentNumber","Abstract"};
+//        java.awt.EventQueue.invokeLater(new Runnable() {
+//            @Override
+//            public void run() {
+//                new TestTable(new DefaultTableModel(obData, colNames){
+//                    @Override
+//                    public Class getColumnClass(int c) {
+//                        return getValueAt(0, c).getClass();
+//                    }
+//                }).setVisible(true);
+//            }
+//        });
+//        
+//    }
     
     private void showGui() {
         frame = new PatbaseQueryFrame(PatbaseRestPlugin.this);
