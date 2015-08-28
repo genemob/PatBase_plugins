@@ -7,23 +7,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.table.DefaultTableModel;
-import org.apache.http.NameValuePair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import patmob.core.PatmobPlugin;
-import patmob.core.TreeBranchEditor_2;
-import patmob.data.PatentCollectionList;
-import patmob.data.PatentCollectionMap;
-import patmob.data.PatentTreeNode;
-import patmob.data.table.TestTable;
-import static patmob.patbase.PatbaseRestClient.initialize;
 
 /**
  *
@@ -35,11 +22,6 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     boolean stopAlerts = false;
     //key = family name; value = projects which have this family
     private HashMap<String,String> familyProjectMap;
-//    private PatentCollectionMap allFamilies;
-//    private HashMap<String, JSONObject> allProjects;
-    
-    
-    
     private JSONObject allFamilies;
     
     @Override
@@ -52,13 +34,8 @@ public class PatbaseRestPlugin implements PatmobPlugin {
         showGui();
     }
     
-    //default format
-    public void runAlerts(String queryFilePath, String updateCmd,
-            PatBaseQueryResultFormat format) {
-        // 20250209: init these collections for each run
+    public void runAlerts(String queryFilePath, String updateCmd) {
         familyProjectMap = new HashMap<>();                 
-//        allFamilies = new PatentCollectionMap();
-//        allProjects = new HashMap<>();
         allFamilies = new JSONObject().put("Families", new JSONArray());
         
         ArrayList<String> jobs = new ArrayList<>();
@@ -72,8 +49,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                     }
                 }
                 AlertRunner alertRunner = new AlertRunner(
-                        jobs.toArray(new String[1]), updateCmd,
-                        new PatentCollectionList("Alert Results"), format);
+                        jobs.toArray(new String[1]), updateCmd);
                 new Thread(alertRunner).start();
             }
         } catch (Exception x) {
@@ -88,43 +64,26 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     private class AlertRunner implements Runnable {
         String[] allQueries;
         String updateCmd;
-//        PatentCollectionList alertResults;
-        //REMOVE?
-        PatBaseQueryResultFormat alertFormat;
         
-        public AlertRunner(String[] queries, String updateString,
-                PatentCollectionList results, PatBaseQueryResultFormat format) {
+        public AlertRunner(String[] queries, String updateString) {
             allQueries = queries;
             updateCmd = updateString;
-            //NOT USED
-//            alertResults = results;
-            alertFormat = format;
         }
         
         @Override
         public void run() {
-            for (int i=0; i<allQueries.length; i++) {
+            for (String allQuerie : allQueries) {
                 if (stopAlerts) {
                     break;
                 }
-                String[] myJob = allQueries[i].split("\t");
+                String[] myJob = allQuerie.split("\t");
                 String projectName = myJob[0],
                         fullQuery = "(" + myJob[1] + ") and (" + updateCmd +")";
                 frame.appendLogText("\nSubmitting " + projectName + "... ");
-//                PatentTreeNode projectNode = PatBaseAPI.query(
-//                        fullQuery, "1", "100", "-1", alertFormat);
                 JSONObject projectResults = PatbaseRestApi.query(
                         fullQuery, PatbaseRestApi.SEARCHRESULTSBIB, "1", "100", projectName);
-                
-//                String summary = projectNode.getDescription();
-//                frame.appendLogText(summary.substring(
-//                        0, summary.indexOf("for query")));
                 if (projectResults!=null) {
                     frame.appendLogText(projectResults.getString("Results") + " records");
-                    
-                    //FOR NOW DON'T BOTHER WITH DUPS...
-//                    allProjects.put(projectName, projectResults);
-                    
                     JSONArray proFams = projectResults.getJSONArray("Families");
                     for (int k=0; k<proFams.length(); k++) {
                         JSONObject proFam = proFams.getJSONObject(k);
@@ -138,137 +97,70 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                             allFamilies.getJSONArray("Families").put(proFam);
                         }
                     }
-//                    if (projectNode.size()>0) {                    
-//                        // store families in familyProjectMap
-//                        Iterator<PatentTreeNode> projectFamilies = 
-//                                projectNode.getChildren().iterator();
-//                        while (projectFamilies.hasNext()) {
-//                            PatentTreeNode family = projectFamilies.next();
-//                            String famName = family.getName();
-//                            if (familyProjectMap.containsKey(famName)) {
-//                                String familyProjects = familyProjectMap.get(famName);
-//                                familyProjectMap.put(famName, 
-//                                        familyProjects + ", " + projectName);
-//                            } else {
-//                                familyProjectMap.put(famName, projectName);
-//                                allFamilies.addChild(family);
-//                            }
-//                        }
-//                    }
                 } else {
                     frame.appendLogText("No records");
                 }
             }
             
-            // re-create projects from familyProjectMap and make allFamilies
-//            for (JSONObject project : allProjects.values()) {
-//System.out.println("ProjectName: " + project.get("ProjectName"));
-//                JSONArray pFams = project.getJSONArray("Families");
-//                for (int i=0; i<pFams.length(); i++) {
-//                    JSONObject fam = pFams.getJSONObject(i);
-//                    fam.put("MemberCount", project.get("ProjectName"));
-//                    allFamilies.getJSONArray("Families").put(fam);
-//
-//                }
-//            }
-            
             for (int m=0; m<allFamilies.getJSONArray("Families").length(); m++){
                 JSONObject o = allFamilies.getJSONArray("Families").getJSONObject(m);
                 o.put("ProjectName", familyProjectMap.get(o.getString("Family")));
+                
+//                System.out.println(o.getString("Title"));
+                JSONArray pubs = o.getJSONArray("Publications");
+                for (int n=0; n<pubs.length(); n++) {
+                    JSONObject pub = pubs.getJSONObject(n);
+                    String pnString = pub.getString("PN") + " " +
+                            pub.getString("KD") + " " +
+                            pub.getString("PD");
+//                    System.out.println("UE: " + pub.getString("UE") + " :: " + pnString);
+                    if (pub.getString("UE").equals(patbaseWeek)) {
+                        o.put("PatentNumber", pnString);
+                    }
+                }
             }
-           
-//            PatentCollectionMap allProjects = new PatentCollectionMap("PMap");
-//            Iterator<Entry<String,String>> iterator = 
-//                    familyProjectMap.entrySet().iterator();
-//            while (iterator.hasNext()) {
-//                Entry<String,String> entry = iterator.next();
-//                String familyName = entry.getKey(),
-//                        projectName = entry.getValue();
-//                if (allProjects.containsKey(projectName)) {
-//                    PatentTreeNode project = allProjects.get(projectName);
-//                    project.addChild(allFamilies.get(familyName));
-//                } else {
-//                    PatentCollectionList project = 
-//                            new PatentCollectionList(projectName);
-//                    project.addChild(allFamilies.get(familyName));
-//                    allProjects.addChild(project);
-//                }
-//            }
-            
             stopAlerts = false;
-//            new TreeBranchEditor_2(
-//                    allProjects, coreAccess.getController()).setVisible(true);
-            
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
+            java.awt.EventQueue.invokeLater(() -> {
                 new PatbaseTableFrame(allFamilies).setVisible(true);
-            }
-        });
+            });
             
         }
     }
     
     public void runQuery(String cmd, String fromRec, String toRec, String sort,
             PatBaseQueryResultFormat format) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new PatbaseTableFrame(PatbaseRestApi.query(
-                        cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, null))
-                        .setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new PatbaseTableFrame(PatbaseRestApi.query(
+                    cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, null))
+                    .setVisible(true);
         });
     }    
-    
-//    // GUI format
-//    public void runQuery(String cmd, String fromRec, String toRec, String sort,
-//            PatBaseQueryResultFormat format) {
-//        final Object[][] obData = PatbaseRestApi.tableQuery(cmd, fromRec, toRec);
-//        final Object[] colNames = new Object[]{"Select","Title","ProbableAssignee",
-//            "EarliestPubDate","PatentNumber","Abstract"};
-//        java.awt.EventQueue.invokeLater(new Runnable() {
-//            @Override
-//            public void run() {
-//                new TestTable(new DefaultTableModel(obData, colNames){
-//                    @Override
-//                    public Class getColumnClass(int c) {
-//                        return getValueAt(0, c).getClass();
-//                    }
-//                }).setVisible(true);
-//            }
-//        });
-//        
-//    }
     
     private void showGui() {
         frame = new PatbaseQueryFrame(PatbaseRestPlugin.this);
         frame.setLogText("Sending HTTP POST request to PatBase API...");
         frame.setVisible(true);
         
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // supress invalid cookie warnings
-                try {
-                    System.setErr(new PrintStream("patbase_cookies.txt"));
-                } catch (FileNotFoundException ex) {
-                    System.out.println("supress warnings: " + ex);
-                }
-                frame.setLogText(PatbaseRestApi.initialize(
-                        coreAccess.getController().getPatmobProperty("patmobProxy"),
-                        "piotr.masiakowski@sanofi.com", "ip4638"));
-                if (PatbaseRestApi.isInitialized) {
-                    JSONObject jOb = PatbaseRestApi.runMethod(
-                            PatbaseRestApi.GETWEEK, null);
-                    if (jOb!=null) {
-                        patbaseWeek =  jOb.getString("Week");
-                        frame.setPbWeekField(patbaseWeek);
-                        frame.setUpdateCmdField(
-                                "UE=" + patbaseWeek + "US or " +
-                                "UE=" + patbaseWeek + "EP or " +
-                                "UE=" + patbaseWeek + "WO");
-                    }
+        java.awt.EventQueue.invokeLater(() -> {
+            // supress invalid cookie warnings
+            try {
+                System.setErr(new PrintStream("patbase_cookies.txt"));
+            } catch (FileNotFoundException ex) {
+                System.out.println("supress warnings: " + ex);
+            }
+            frame.setLogText(PatbaseRestApi.initialize(
+                    coreAccess.getController().getPatmobProperty("patmobProxy"),
+                    "piotr.masiakowski@sanofi.com", "ip4638"));
+            if (PatbaseRestApi.isInitialized) {
+                JSONObject jOb = PatbaseRestApi.runMethod(
+                        PatbaseRestApi.GETWEEK, null);
+                if (jOb!=null) {
+                    patbaseWeek =  jOb.getString("Week");
+                    frame.setPbWeekField(patbaseWeek);
+                    frame.setUpdateCmdField(
+                            "UE=" + patbaseWeek + "US or " +
+                            "UE=" + patbaseWeek + "EP or " +
+                            "UE=" + patbaseWeek + "WO");
                 }
             }
         });

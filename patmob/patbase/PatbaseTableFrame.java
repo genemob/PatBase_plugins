@@ -1,5 +1,7 @@
 package patmob.patbase;
 
+import java.awt.Desktop;
+import java.net.URL;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -97,7 +99,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jPanel1 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
+        pbExpressButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -115,7 +117,12 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
 
         jSplitPane1.setTopComponent(jScrollPane1);
 
-        jButton1.setText("jButton1");
+        pbExpressButton.setText("PatBase Express");
+        pbExpressButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pbExpressButtonActionPerformed(evt);
+            }
+        });
 
         jTextArea1.setColumns(20);
         jTextArea1.setLineWrap(true);
@@ -128,7 +135,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jButton1)
+                .addComponent(pbExpressButton)
                 .addGap(0, 0, Short.MAX_VALUE))
             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
         );
@@ -137,7 +144,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1))
+                .addComponent(pbExpressButton))
         );
 
         jSplitPane1.setRightComponent(jPanel1);
@@ -164,8 +171,21 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void pbExpressButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pbExpressButtonActionPerformed
+        // TODO add your handling code here:
+        int viewRow = jTable1.getSelectedRow();
+        final int modelRow = jTable1.convertRowIndexToModel(viewRow);
+        JSONObject pbFam = 
+                myJOb.getJSONArray("Families").getJSONObject(modelRow);
+        String pn = pbFam.getString("PatentNumber");
+        pn = pn.substring(0, pn.indexOf(" "));
+        String url = "http://www.patbase.com/express/default.asp?saction=P-" + pn;
+        try {
+            Desktop.getDesktop().browse(new URL(url).toURI());
+        } catch (Exception ex) {System.out.println("PB Express: " + ex);}
+    }//GEN-LAST:event_pbExpressButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
@@ -175,5 +195,6 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JButton pbExpressButton;
     // End of variables declaration//GEN-END:variables
 }

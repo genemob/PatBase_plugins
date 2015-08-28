@@ -358,7 +358,7 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_queryFileButtonActionPerformed
 
     private void runAlertsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runAlertsButtonActionPerformed
-        parent.runAlerts(getQueryFileField(), getUpdateCmdField(), defaultFormat);
+        parent.runAlerts(getQueryFileField(), getUpdateCmdField());
     }//GEN-LAST:event_runAlertsButtonActionPerformed
 
     /*
