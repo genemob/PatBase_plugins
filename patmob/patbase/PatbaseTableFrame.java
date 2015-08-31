@@ -8,10 +8,6 @@ import javax.swing.table.TableModel;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/**
- *
- * @author nm54935
- */
 public class PatbaseTableFrame extends javax.swing.JFrame {
     TableModel myModel = null;
     JSONObject myJOb = null;
@@ -35,12 +31,6 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             jTextArea1.setText(
                     "  Patent Number: " + pbFam.getString("PatentNumber") +
                     "\n  PatBase Family: " + pbFam.getString("Family") +
-//                    "\n  Member Count: " + pbFam.getString("MemberCount") +
-//                    "\n  Earliest Publication Date: " + pbFam.getString(
-//                            "EarliestPubDate") +
-//                    "\n  Back Citations: " + pbFam.getString("BackCitations") +
-//                    "\n  Forward Citations: " + pbFam.getString("ForwardCitations") +
-                            
                     "\n\n  Probable Assignee: " + pbFam.getString("ProbableAssignee") +
                     "\n  First Inventor: " + pbFam.getString("FirstInventor") +
                     "\n  Title: " + pbFam.getString("Title") +
@@ -51,39 +41,67 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     
     private TableModel getCustomModel(JSONObject jObject) {
         JSONArray famArray = jObject.getJSONArray("Families");
+        switch (jObject.getString("ResultType")) {
+            case PatbaseRestApi.SEARCHRESULTS:
+                return getPlainModel(famArray);
+            case PatbaseRestApi.SEARCHRESULTSBIB:
+                return getBibModel(famArray);
+            default:
+                return null;
+        }
+    }
+    
+    private TableModel getPlainModel(JSONArray famArray) {
         Object[][] data = new Object[famArray.length()][];
         for (int i=0; i<famArray.length(); i++) {
             JSONObject o = famArray.getJSONObject(i);
-//System.out.println("*** RUN " + i + ": "+ o.toString(2));
-            String projName;
-            try{
-            projName = o.getString("ProjectName");
-            }catch (Exception x){
-                System.out.println(x);
-                projName = "NA";
-            }
-//            if (projName==null) projName = "NA";
-//System.out.println(projName);
             data[i] = new Object[]{
                 false,
-                    projName,
                 o.getString("Title"),
                 o.getString("ProbableAssignee"),
                 o.getString("PatentNumber"),
-//                o.getString("EarliestPubDate"),
-//                o.getString("Abstract")
+                o.getString("EarliestPubDate"),
+                o.getString("MemberCount")
             };
         }
         Object[] colNames = new Object[]{
             "Select",
-                "Project",
             "Title",
             "ProbableAssignee",
             "PatentNumber",
-//            "EarliestPubDate",
-//            "Abstract"
-        };
+            "EarliestPubDate",
+            "MemberCount"
+        };   
         return new DefaultTableModel(data, colNames){
+            //override getColumnClass to render boolean as checkbox
+            @Override
+            public Class getColumnClass(int c) {
+                return getValueAt(0, c).getClass();
+            }
+        };
+    }
+
+    private TableModel getBibModel(JSONArray famArray) {
+        Object[][] data = new Object[famArray.length()][];
+        for (int i=0; i<famArray.length(); i++) {
+            JSONObject o = famArray.getJSONObject(i);
+            data[i] = new Object[]{
+                false,
+                o.getString("ProjectName"),
+                o.getString("Title"),
+                o.getString("ProbableAssignee"),
+                o.getString("PatentNumber")
+            };
+        }
+        Object[] colNames = new Object[]{
+            "Select",
+            "Project",
+            "Title",
+            "ProbableAssignee",
+            "PatentNumber"
+        };   
+        return new DefaultTableModel(data, colNames){
+            //override getColumnClass to render boolean as checkbox
             @Override
             public Class getColumnClass(int c) {
                 return getValueAt(0, c).getClass();
@@ -178,7 +196,15 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         JSONObject pbFam = 
                 myJOb.getJSONArray("Families").getJSONObject(modelRow);
         String pn = pbFam.getString("PatentNumber");
-        pn = pn.substring(0, pn.indexOf(" "));
+        if (pn.contains(" ")) {
+            pn = pn.substring(0, pn.indexOf(" "));
+        } else {
+            if (Character.isLetter(pn.charAt(pn.length()-2))) {
+                pn = pn.substring(0, pn.length()-2);
+            } else if (Character.isLetter(pn.charAt(pn.length()-1))) {
+                pn = pn.substring(0, pn.length()-1);
+            }
+        }
         String url = "http://www.patbase.com/express/default.asp?saction=P-" + pn;
         try {
             Desktop.getDesktop().browse(new URL(url).toURI());

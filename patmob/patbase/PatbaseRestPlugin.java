@@ -37,6 +37,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     public void runAlerts(String queryFilePath, String updateCmd) {
         familyProjectMap = new HashMap<>();                 
         allFamilies = new JSONObject().put("Families", new JSONArray());
+        allFamilies.put("ResultType", PatbaseRestApi.SEARCHRESULTSBIB);
         
         ArrayList<String> jobs = new ArrayList<>();
         try {
@@ -130,9 +131,10 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     public void runQuery(String cmd, String fromRec, String toRec, String sort,
             PatBaseQueryResultFormat format) {
         java.awt.EventQueue.invokeLater(() -> {
-            new PatbaseTableFrame(PatbaseRestApi.query(
-                    cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, null))
-                    .setVisible(true);
+            JSONObject qResult = PatbaseRestApi.query(
+                    cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, null);
+            qResult.put("ResultType", PatbaseRestApi.SEARCHRESULTS);
+            new PatbaseTableFrame(qResult).setVisible(true);
         });
     }    
     
