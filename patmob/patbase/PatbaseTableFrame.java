@@ -122,7 +122,11 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jTextArea1 = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
+        saveMenuItem = new javax.swing.JMenuItem();
+        writeMenuItem = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
+        selectMenuItem = new javax.swing.JMenuItem();
+        deselectMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("PatBase Table");
@@ -168,9 +172,38 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jSplitPane1.setRightComponent(jPanel1);
 
         jMenu1.setText("File");
+
+        saveMenuItem.setText("Save to Database...");
+        jMenu1.add(saveMenuItem);
+
+        writeMenuItem.setText("Write to File...");
+        writeMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                writeMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu1.add(writeMenuItem);
+
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Table");
+
+        selectMenuItem.setText("Select All");
+        selectMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                selectMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu2.add(selectMenuItem);
+
+        deselectMenuItem.setText("Deselect All");
+        deselectMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deselectMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu2.add(deselectMenuItem);
+
         jMenuBar1.add(jMenu2);
 
         setJMenuBar(jMenuBar1);
@@ -211,7 +244,51 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         } catch (Exception ex) {System.out.println("PB Express: " + ex);}
     }//GEN-LAST:event_pbExpressButtonActionPerformed
 
+    private void setCheckboxes(boolean sellection) {
+        int selColIndex = 0;
+        for (int s=0; s<jTable1.getColumnCount(); s++) {
+            if (jTable1.getColumnName(s).equals("Select")) {
+                selColIndex = s;
+                break;
+            }
+        }
+        for (int i=0; i<jTable1.getRowCount(); i++) {
+            jTable1.setValueAt(sellection, i, selColIndex);
+        }
+    }
+    
+    private void writeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_writeMenuItemActionPerformed
+        int selColIndex = 0;
+        for (int s=0; s<jTable1.getColumnCount(); s++) {
+//            System.out.println(jTable1.getColumnName(s));
+            if (jTable1.getColumnName(s).equals("Select")) {
+                selColIndex = s;
+                break;
+            }
+        }
+        for (int i=0; i<jTable1.getRowCount(); i++) {
+//            System.out.println(jTable1.getValueAt(i, selColIndex));
+            
+            if ((boolean)jTable1.getValueAt(i,selColIndex)==true) {
+                int modelRow = jTable1.convertRowIndexToModel(i);
+                JSONObject pbFam = 
+                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
+                System.out.println(pbFam.getString("PatentNumber") + " :: " +
+                        pbFam.getString("ProbableAssignee"));
+            }
+        }
+    }//GEN-LAST:event_writeMenuItemActionPerformed
+
+    private void selectMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectMenuItemActionPerformed
+        setCheckboxes(true);
+    }//GEN-LAST:event_selectMenuItemActionPerformed
+
+    private void deselectMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deselectMenuItemActionPerformed
+        setCheckboxes(false);
+    }//GEN-LAST:event_deselectMenuItemActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem deselectMenuItem;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
@@ -222,5 +299,8 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     private javax.swing.JTable jTable1;
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JButton pbExpressButton;
+    private javax.swing.JMenuItem saveMenuItem;
+    private javax.swing.JMenuItem selectMenuItem;
+    private javax.swing.JMenuItem writeMenuItem;
     // End of variables declaration//GEN-END:variables
 }
