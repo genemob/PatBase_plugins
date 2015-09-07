@@ -33,10 +33,26 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                     "\n  PatBase Family: " + pbFam.getString("Family") +
                     "\n\n  Probable Assignee: " + pbFam.getString("ProbableAssignee") +
                     "\n  First Inventor: " + pbFam.getString("FirstInventor") +
-                    "\n  Title: " + pbFam.getString("Title") +
-                    "\n  Abstract: " + pbFam.getString("Abstract")
+                    "\n  Title: " + enTitle(pbFam) +
+                    "\n  Abstract: " + enAbstract(pbFam)
             );
         });        
+    }
+    
+    private String enTitle(JSONObject o) {
+        String title = o.getString("Title");
+        if (title.contains("  ")) {
+            title = title.substring(0, title.lastIndexOf("  "));
+        }
+        return title;
+    }
+    
+    private String enAbstract(JSONObject o) {
+        String abs = o.getString("Abstract");
+        if (abs.contains("   ")) {
+            abs = abs.substring(0, abs.lastIndexOf("   "));
+        }
+        return abs;
     }
     
     private TableModel getCustomModel(JSONObject jObject) {
@@ -61,7 +77,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                 o.getString("ProbableAssignee"),
                 o.getString("PatentNumber"),
                 o.getString("EarliestPubDate"),
-                o.getString("MemberCount")
+                Integer.parseInt(o.getString("MemberCount"))
             };
         }
         Object[] colNames = new Object[]{
@@ -90,7 +106,9 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                 o.getString("ProjectName"),
                 o.getString("Title"),
                 o.getString("ProbableAssignee"),
-                o.getString("PatentNumber")
+                o.getString("PatentNumber"),
+                o.getString("PD"),
+                o.getInt("mCount")
             };
         }
         Object[] colNames = new Object[]{
@@ -98,7 +116,9 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             "Project",
             "Title",
             "ProbableAssignee",
-            "PatentNumber"
+            "PatentNumber",
+            "Date",
+            "Count"
         };   
         return new DefaultTableModel(data, colNames){
             //override getColumnClass to render boolean as checkbox

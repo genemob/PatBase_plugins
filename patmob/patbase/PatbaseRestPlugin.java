@@ -104,19 +104,27 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             }
             
             for (int m=0; m<allFamilies.getJSONArray("Families").length(); m++){
+//                int memberCount = 0;
                 JSONObject o = allFamilies.getJSONArray("Families").getJSONObject(m);
                 o.put("ProjectName", familyProjectMap.get(o.getString("Family")));
-                
+                o.put("PatentNumber", "");
+                o.put("PD", "");
 //                System.out.println(o.getString("Title"));
                 JSONArray pubs = o.getJSONArray("Publications");
+                o.put("mCount", pubs.length());
                 for (int n=0; n<pubs.length(); n++) {
                     JSONObject pub = pubs.getJSONObject(n);
                     String pnString = pub.getString("PN") + " " +
-                            pub.getString("KD") + " " +
-                            pub.getString("PD");
+                            pub.getString("KD");// + " " +
+//                            pub.getString("PD");
 //                    System.out.println("UE: " + pub.getString("UE") + " :: " + pnString);
-                    if (pub.getString("UE").equals(patbaseWeek)) {
-                        o.put("PatentNumber", pnString);
+                    if (pub.getString("UE").equals(patbaseWeek) &&
+                            (pub.getString("CC").equals("EP") ||
+                            pub.getString("CC").equals("US") ||
+                            pub.getString("CC").equals("WO"))) {
+                        o.put("PatentNumber", o.getString("PatentNumber") + 
+                                pnString + " ");
+                        o.put("PD", o.get("PD") + pub.getString("PD") + " ");
                     }
                 }
             }

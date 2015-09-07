@@ -345,7 +345,7 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     }
     
     private void stopAlertsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopAlertsButtonActionPerformed
-        // TODO add your handling code here:
+        parent.stopAlertRunner();
     }//GEN-LAST:event_stopAlertsButtonActionPerformed
 
     private void queryFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_queryFileButtonActionPerformed
