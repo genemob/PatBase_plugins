@@ -1,7 +1,10 @@
 package patmob.patbase;
 
 import java.awt.Desktop;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.net.URL;
+import javax.swing.JFileChooser;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -194,6 +197,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jMenu1.setText("File");
 
         saveMenuItem.setText("Save to Database...");
+        saveMenuItem.setEnabled(false);
         jMenu1.add(saveMenuItem);
 
         writeMenuItem.setText("Write to File...");
@@ -286,17 +290,53 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                 break;
             }
         }
-        for (int i=0; i<jTable1.getRowCount(); i++) {
-//            System.out.println(jTable1.getValueAt(i, selColIndex));
-            
-            if ((boolean)jTable1.getValueAt(i,selColIndex)==true) {
-                int modelRow = jTable1.convertRowIndexToModel(i);
-                JSONObject pbFam = 
-                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
-                System.out.println(pbFam.getString("PatentNumber") + " :: " +
-                        pbFam.getString("ProbableAssignee"));
-            }
+        
+        JFileChooser fc = new JFileChooser();
+        int i = fc.showSaveDialog(null);
+        if (i==JFileChooser.APPROVE_OPTION) {
+            try {
+                BufferedWriter bw = new BufferedWriter(new FileWriter(
+                        fc.getSelectedFile()));
+                bw.write(
+                        "Patent Number" +
+                        "\tPatBase Family" +
+                        "\tProbable Assignee" +
+                        "\tFirst Inventor" +
+                        "\tTitle" +
+                        "\tAbstract" + "\n");
+                bw.flush();
+//                writeChildren(bw, collection, "\t");
+                for (int j=0; j<jTable1.getRowCount(); j++) {
+                    if ((boolean)jTable1.getValueAt(j,selColIndex)==true) {
+                        int modelRow = jTable1.convertRowIndexToModel(j);
+                        JSONObject pbFam = myJOb.getJSONArray("Families")
+                                .getJSONObject(modelRow);
+                        bw.write(
+                                pbFam.getString("PatentNumber") +
+                                "\t" + pbFam.getString("Family") +
+                                "\t" + pbFam.getString("ProbableAssignee") +
+                                "\t" + pbFam.getString("FirstInventor") +
+                                "\t" + enTitle(pbFam) +
+                                "\t" + enAbstract(pbFam) + "\n"
+                        );
+                        bw.flush();
+                    }
+                }
+                bw.close();
+            } catch (Exception x) {System.out.println("PatmobDesktop.saveNodeToTextFile" + x);}
         }
+        
+//        for (int i=0; i<jTable1.getRowCount(); i++) {
+////            System.out.println(jTable1.getValueAt(i, selColIndex));
+//            
+//            if ((boolean)jTable1.getValueAt(i,selColIndex)==true) {
+//                int modelRow = jTable1.convertRowIndexToModel(i);
+//                JSONObject pbFam = 
+//                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
+//                System.out.println(pbFam.getString("PatentNumber") + " :: " +
+//                        pbFam.getString("ProbableAssignee"));
+//            }
+//        }
     }//GEN-LAST:event_writeMenuItemActionPerformed
 
     private void selectMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectMenuItemActionPerformed

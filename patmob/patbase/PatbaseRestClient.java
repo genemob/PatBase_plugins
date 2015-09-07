@@ -198,7 +198,7 @@ X-CDN: Incapsula
         
         String query = "UE=1522 and tac=(FGF21)";
         System.out.println(PatbaseRestApi.query(
-                query, PatbaseRestApi.SEARCHRESULTS, "1", null, null).toString(2));
+                query, PatbaseRestApi.SEARCHRESULTS, "1", null, "2", null).toString(2));
     }
     
     public static URI getUri(String method, NameValuePair... params) {

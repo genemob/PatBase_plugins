@@ -82,7 +82,8 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                         fullQuery = "(" + myJob[1] + ") and (" + updateCmd +")";
                 frame.appendLogText("\nSubmitting " + projectName + "... ");
                 JSONObject projectResults = PatbaseRestApi.query(
-                        fullQuery, PatbaseRestApi.SEARCHRESULTSBIB, "1", "100", projectName);
+                        fullQuery, PatbaseRestApi.SEARCHRESULTSBIB, 
+                        "1", "100", "2", projectName);
                 if (projectResults!=null) {
                     frame.appendLogText(projectResults.getString("Results") + " records");
                     JSONArray proFams = projectResults.getJSONArray("Families");
@@ -136,13 +137,16 @@ public class PatbaseRestPlugin implements PatmobPlugin {
         }
     }
     
-    public void runQuery(String cmd, String fromRec, String toRec, String sort,
-            PatBaseQueryResultFormat format) {
+    public void runQuery(String cmd, String fromRec, String toRec, String sort) {
+//            PatBaseQueryResultFormat format) {
         java.awt.EventQueue.invokeLater(() -> {
             JSONObject qResult = PatbaseRestApi.query(
-                    cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, null);
+                    cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, sort, 
+                    "Single query");
             qResult.put("ResultType", PatbaseRestApi.SEARCHRESULTS);
             new PatbaseTableFrame(qResult).setVisible(true);
+            frame.appendQueryLogText(qResult.getString("Results")
+                    + " results for [" + cmd + "]");
         });
     }    
     

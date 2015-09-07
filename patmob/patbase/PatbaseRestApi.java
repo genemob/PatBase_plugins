@@ -50,7 +50,7 @@ public class PatbaseRestApi extends PatbaseRestClient{
      * @return
      */
     public static JSONObject query(String query, String resultType, 
-            String from, String to, String projectName) {
+            String from, String to, String sort, String projectName) {
         JSONObject jOb = null;
         try {
             jOb = runMethod(QUERY, new BasicNameValuePair("query", query));
@@ -65,7 +65,7 @@ System.out.println(jOb.toString());
                         new BasicNameValuePair("querykey", qKey), 
                         new BasicNameValuePair("from", from), 
                         new BasicNameValuePair("to", to),
-                        new BasicNameValuePair("sortorder", "2"));
+                        new BasicNameValuePair("sortorder", sort));
                 jOb.put("Results", resultCount);
                 if (projectName==null || projectName.equals("")) projectName = "NA";
                 jOb.put("ProjectName", projectName);

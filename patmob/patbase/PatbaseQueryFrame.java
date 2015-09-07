@@ -15,7 +15,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class PatbaseQueryFrame extends javax.swing.JFrame {
     PatbaseRestPlugin parent;
-    PatBaseQueryResultFormat defaultFormat;
+//    PatBaseQueryResultFormat defaultFormat;
 
     /**
      * Creates new form PatBaseFrame
@@ -24,9 +24,9 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     public PatbaseQueryFrame(PatbaseRestPlugin plugin) {
         parent = plugin;
         initComponents();
-        defaultFormat = new PatBaseQueryResultFormat();
-        afterDateTextField.setText(defaultFormat.afterDate());
-        selectCountriesTextField.setText(defaultFormat.selectCountries());
+//        defaultFormat = new PatBaseQueryResultFormat();
+//        afterDateTextField.setText(defaultFormat.afterDate());
+//        selectCountriesTextField.setText(defaultFormat.selectCountries());
     }
     
     // ALERT LOG TextArea
@@ -38,6 +38,10 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     }
     public void appendLogText(String txt) {
         alertLogArea.append(txt);
+    }
+    
+    public void appendQueryLogText (String txt) {
+        queryLogTextArea.append(txt + "\n");
     }
 
     // Current PatBase Week TextField
@@ -81,8 +85,6 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        buttonGroup1 = new javax.swing.ButtonGroup();
-        buttonGroup2 = new javax.swing.ButtonGroup();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel2 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
@@ -104,12 +106,10 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
         toRecField = new javax.swing.JTextField();
         QueryRunButton = new javax.swing.JButton();
         QueryCancelButton = new javax.swing.JButton();
-        allCountriesRadioButton = new javax.swing.JRadioButton();
-        jRadioButton2 = new javax.swing.JRadioButton();
-        selectCountriesTextField = new javax.swing.JTextField();
-        anyDateRadioButton = new javax.swing.JRadioButton();
-        jRadioButton4 = new javax.swing.JRadioButton();
-        afterDateTextField = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
+        sortComboBox = new javax.swing.JComboBox();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        queryLogTextArea = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("PatBase REST API");
@@ -195,7 +195,7 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
                     .addComponent(runAlertsButton)
                     .addComponent(stopAlertsButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 123, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -229,19 +229,16 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
 
         QueryCancelButton.setText("Cancel");
 
-        buttonGroup1.add(allCountriesRadioButton);
-        allCountriesRadioButton.setText("All Countries");
+        jLabel5.setText("Sort:");
 
-        buttonGroup1.add(jRadioButton2);
-        jRadioButton2.setSelected(true);
-        jRadioButton2.setText("Select Countries:");
+        sortComboBox.setMaximumRowCount(11);
+        sortComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Priority Date Asc.", "Priority Date Desc.", "Assignee", "Inventor", "Publication Date Asc.", "Publication Date Desc.", "Patent number", "Most Cited", "Relevance", "Family Number Asc.", "Family Number Desc." }));
+        sortComboBox.setSelectedIndex(1);
+        sortComboBox.setToolTipText("");
 
-        buttonGroup2.add(anyDateRadioButton);
-        anyDateRadioButton.setText("Any Publication Date");
-
-        buttonGroup2.add(jRadioButton4);
-        jRadioButton4.setSelected(true);
-        jRadioButton4.setText("After:");
+        queryLogTextArea.setColumns(20);
+        queryLogTextArea.setRows(5);
+        jScrollPane3.setViewportView(queryLogTextArea);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -250,18 +247,7 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(anyDateRadioButton)
-                        .addGap(18, 18, 18)
-                        .addComponent(jRadioButton4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(afterDateTextField))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(allCountriesRadioButton)
-                        .addGap(18, 18, 18)
-                        .addComponent(jRadioButton2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(selectCountriesTextField))
+                    .addComponent(jScrollPane3)
                     .addComponent(jScrollPane1)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
@@ -271,7 +257,10 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(toRecField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 177, Short.MAX_VALUE))
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(sortComboBox, 0, 131, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(QueryRunButton)
@@ -284,24 +273,18 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(allCountriesRadioButton)
-                    .addComponent(jRadioButton2)
-                    .addComponent(selectCountriesTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(anyDateRadioButton)
-                    .addComponent(jRadioButton4)
-                    .addComponent(afterDateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(fromRecField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
-                    .addComponent(toRecField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                    .addComponent(toRecField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel5)
+                    .addComponent(sortComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(QueryRunButton)
                     .addComponent(QueryCancelButton))
@@ -330,19 +313,20 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
                 cmdTextArea.getText(),
                 fromRecField.getText(),
                 toRecField.getText(),
-                "-1", formatFromGUI());
+                Integer.toString(sortComboBox.getSelectedIndex() + 1));
+//                "-1"); //, formatFromGUI());
     }//GEN-LAST:event_QueryRunButtonActionPerformed
 
-    private PatBaseQueryResultFormat formatFromGUI() {
-        String countries = null, date = null;
-        if (!allCountriesRadioButton.isSelected()) {
-            countries = selectCountriesTextField.getText();
-        }
-        if (!anyDateRadioButton.isSelected()) {
-            date = afterDateTextField.getText();
-        }
-        return new PatBaseQueryResultFormat(countries, date);
-    }
+//    private PatBaseQueryResultFormat formatFromGUI() {
+//        String countries = null, date = null;
+//        if (!allCountriesRadioButton.isSelected()) {
+//            countries = selectCountriesTextField.getText();
+//        }
+//        if (!anyDateRadioButton.isSelected()) {
+//            date = afterDateTextField.getText();
+//        }
+//        return new PatBaseQueryResultFormat(countries, date);
+//    }
     
     private void stopAlertsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopAlertsButtonActionPerformed
         parent.stopAlertRunner();
@@ -401,30 +385,26 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton QueryCancelButton;
     private javax.swing.JButton QueryRunButton;
-    private javax.swing.JTextField afterDateTextField;
     private javax.swing.JTextArea alertLogArea;
-    private javax.swing.JRadioButton allCountriesRadioButton;
-    private javax.swing.JRadioButton anyDateRadioButton;
-    private javax.swing.ButtonGroup buttonGroup1;
-    private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JTextArea cmdTextArea;
     private javax.swing.JTextField fromRecField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JRadioButton jRadioButton2;
-    private javax.swing.JRadioButton jRadioButton4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField pbWeekField;
     private javax.swing.JButton queryFileButton;
     private javax.swing.JTextField queryFileField;
+    private javax.swing.JTextArea queryLogTextArea;
     private javax.swing.JButton runAlertsButton;
-    private javax.swing.JTextField selectCountriesTextField;
+    private javax.swing.JComboBox sortComboBox;
     private javax.swing.JButton stopAlertsButton;
     private javax.swing.JTextField toRecField;
     private javax.swing.JTextField updateCmdField;
