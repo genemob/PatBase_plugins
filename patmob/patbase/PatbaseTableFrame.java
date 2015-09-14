@@ -10,6 +10,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import patmob.convert.PNFormat;
+import patmob.data.PatentDocument;
 
 public class PatbaseTableFrame extends javax.swing.JFrame {
     TableModel myModel = null;
@@ -143,6 +145,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         pbExpressButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
+        patOfficeButton = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         saveMenuItem = new javax.swing.JMenuItem();
@@ -175,21 +178,33 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jTextArea1.setWrapStyleWord(true);
         jScrollPane2.setViewportView(jTextArea1);
 
+        patOfficeButton.setText("Patent Office");
+        patOfficeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                patOfficeButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(pbExpressButton)
-                .addGap(0, 0, Short.MAX_VALUE))
             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(pbExpressButton)
+                .addGap(18, 18, 18)
+                .addComponent(patOfficeButton)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(pbExpressButton))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(pbExpressButton)
+                    .addComponent(patOfficeButton)))
         );
 
         jSplitPane1.setRightComponent(jPanel1);
@@ -248,6 +263,31 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
 
     private void pbExpressButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pbExpressButtonActionPerformed
         // TODO add your handling code here:
+//        int viewRow = jTable1.getSelectedRow();
+//        final int modelRow = jTable1.convertRowIndexToModel(viewRow);
+//        JSONObject pbFam = 
+//                myJOb.getJSONArray("Families").getJSONObject(modelRow);
+//        String pn = pbFam.getString("PatentNumber");
+//        if (pn.contains(" ")) {
+//            pn = pn.substring(0, pn.indexOf(" "));
+//        } else {
+//            if (Character.isLetter(pn.charAt(pn.length()-2))) {
+//                pn = pn.substring(0, pn.length()-2);
+//            } else if (Character.isLetter(pn.charAt(pn.length()-1))) {
+//                pn = pn.substring(0, pn.length()-1);
+//            }
+//        }
+//        String url = "http://www.patbase.com/express/default.asp?saction=P-"
+//                + getPN();
+        showURL("http://www.patbase.com/express/default.asp?saction=P-" + getPN());
+    }//GEN-LAST:event_pbExpressButtonActionPerformed
+
+    private void showURL(String url) {
+        try {
+            Desktop.getDesktop().browse(new URL(url).toURI());
+        } catch (Exception ex) {System.out.println("showURL: " + ex);}        
+    }
+    private String getPN() {
         int viewRow = jTable1.getSelectedRow();
         final int modelRow = jTable1.convertRowIndexToModel(viewRow);
         JSONObject pbFam = 
@@ -262,12 +302,9 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                 pn = pn.substring(0, pn.length()-1);
             }
         }
-        String url = "http://www.patbase.com/express/default.asp?saction=P-" + pn;
-        try {
-            Desktop.getDesktop().browse(new URL(url).toURI());
-        } catch (Exception ex) {System.out.println("PB Express: " + ex);}
-    }//GEN-LAST:event_pbExpressButtonActionPerformed
-
+        return pn;
+    }
+    
     private void setCheckboxes(boolean sellection) {
         int selColIndex = 0;
         for (int s=0; s<jTable1.getColumnCount(); s++) {
@@ -347,6 +384,32 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         setCheckboxes(false);
     }//GEN-LAST:event_deselectMenuItemActionPerformed
 
+    private void patOfficeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_patOfficeButtonActionPerformed
+        // TODO add your handling code here:
+        String pn = getPN();
+        PatentDocument pd = new PatentDocument(pn);
+        switch (pd.getCountry()) {
+            case "US":
+                pn = PNFormat.getPN(pd, PNFormat.USPTO);
+                if (pn.length()==7) {
+                    showURL("http://patft1.uspto.gov/netacgi/nph-Parser?patentnumber=" + pn);
+                } else {
+                    showURL("http://appft.uspto.gov/netacgi/nph-Parser?Sect1=PTO1"
+                            + "&Sect2=HITOFF&d=PG01&p=1&u=%2Fnetahtml%2FPTO%2Fsrchnum.html"
+                            + "&r=1&f=G&l=50&s1=%22" + pn + "%22.PGNR.");
+                }
+                break;
+            default:
+                pn = PNFormat.getPN(pd, PNFormat.EPO);
+                if (pd.getCountry().equals("WO")) {
+                    showURL("https://patentscope.wipo.int/search/en/detail.jsf?docId=WO" + pn);
+                } else {
+                    showURL("http://worldwide.espacenet.com/publicationDetails/biblio?CC="
+                            + pd.getCountry() + "&NR=" + pn);
+                }
+        }
+    }//GEN-LAST:event_patOfficeButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem deselectMenuItem;
     private javax.swing.JMenu jMenu1;
@@ -358,6 +421,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JButton patOfficeButton;
     private javax.swing.JButton pbExpressButton;
     private javax.swing.JMenuItem saveMenuItem;
     private javax.swing.JMenuItem selectMenuItem;
