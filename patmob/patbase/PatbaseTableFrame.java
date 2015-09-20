@@ -5,19 +5,27 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.net.URL;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import patmob.convert.PNFormat;
+import patmob.core.TreeBranchEditor_2;
+import patmob.data.PatentCollectionList;
+import patmob.data.PatentCollectionMap;
 import patmob.data.PatentDocument;
+import patmob.data.PatentTreeNode;
 
 public class PatbaseTableFrame extends javax.swing.JFrame {
     TableModel myModel = null;
     JSONObject myJOb = null;
+    PatbaseRestPlugin plugin;
 
-    public PatbaseTableFrame(JSONObject patbaseSearchResults) {
+    public PatbaseTableFrame(JSONObject patbaseSearchResults, 
+            PatbaseRestPlugin parent) {
+        plugin = parent;
         myJOb = patbaseSearchResults;
         myModel = getCustomModel(myJOb);
         initComponents();
@@ -153,6 +161,8 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jMenu2 = new javax.swing.JMenu();
         selectMenuItem = new javax.swing.JMenuItem();
         deselectMenuItem = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        treeMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("PatBase Table");
@@ -242,6 +252,15 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             }
         });
         jMenu2.add(deselectMenuItem);
+        jMenu2.add(jSeparator1);
+
+        treeMenuItem.setText("Convert to Tree");
+        treeMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                treeMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu2.add(treeMenuItem);
 
         jMenuBar1.add(jMenu2);
 
@@ -262,23 +281,6 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void pbExpressButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pbExpressButtonActionPerformed
-        // TODO add your handling code here:
-//        int viewRow = jTable1.getSelectedRow();
-//        final int modelRow = jTable1.convertRowIndexToModel(viewRow);
-//        JSONObject pbFam = 
-//                myJOb.getJSONArray("Families").getJSONObject(modelRow);
-//        String pn = pbFam.getString("PatentNumber");
-//        if (pn.contains(" ")) {
-//            pn = pn.substring(0, pn.indexOf(" "));
-//        } else {
-//            if (Character.isLetter(pn.charAt(pn.length()-2))) {
-//                pn = pn.substring(0, pn.length()-2);
-//            } else if (Character.isLetter(pn.charAt(pn.length()-1))) {
-//                pn = pn.substring(0, pn.length()-1);
-//            }
-//        }
-//        String url = "http://www.patbase.com/express/default.asp?saction=P-"
-//                + getPN();
         showURL("http://www.patbase.com/express/default.asp?saction=P-" + getPN());
     }//GEN-LAST:event_pbExpressButtonActionPerformed
 
@@ -318,16 +320,24 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         }
     }
     
-    private void writeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_writeMenuItemActionPerformed
-        int selColIndex = 0;
-        for (int s=0; s<jTable1.getColumnCount(); s++) {
-//            System.out.println(jTable1.getColumnName(s));
-            if (jTable1.getColumnName(s).equals("Select")) {
-                selColIndex = s;
+    /**
+     * 
+     * @param columnName
+     * @return -1 if not found
+     */
+    private int getColumnIndex(String columnName) {
+        int colIndex = -1;
+        for (int i=0; i<jTable1.getColumnCount(); i++) {
+            if (jTable1.getColumnName(i).equals(columnName)) {
+                colIndex = i;
                 break;
             }
         }
-        
+        return colIndex;
+    }
+    
+    private void writeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_writeMenuItemActionPerformed
+        int selColIndex = getColumnIndex("Select");
         JFileChooser fc = new JFileChooser();
         int i = fc.showSaveDialog(null);
         if (i==JFileChooser.APPROVE_OPTION) {
@@ -342,7 +352,6 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                         "\tTitle" +
                         "\tAbstract" + "\n");
                 bw.flush();
-//                writeChildren(bw, collection, "\t");
                 for (int j=0; j<jTable1.getRowCount(); j++) {
                     if ((boolean)jTable1.getValueAt(j,selColIndex)==true) {
                         int modelRow = jTable1.convertRowIndexToModel(j);
@@ -362,18 +371,6 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                 bw.close();
             } catch (Exception x) {System.out.println("PatmobDesktop.saveNodeToTextFile" + x);}
         }
-        
-//        for (int i=0; i<jTable1.getRowCount(); i++) {
-////            System.out.println(jTable1.getValueAt(i, selColIndex));
-//            
-//            if ((boolean)jTable1.getValueAt(i,selColIndex)==true) {
-//                int modelRow = jTable1.convertRowIndexToModel(i);
-//                JSONObject pbFam = 
-//                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
-//                System.out.println(pbFam.getString("PatentNumber") + " :: " +
-//                        pbFam.getString("ProbableAssignee"));
-//            }
-//        }
     }//GEN-LAST:event_writeMenuItemActionPerformed
 
     private void selectMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectMenuItemActionPerformed
@@ -385,7 +382,6 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_deselectMenuItemActionPerformed
 
     private void patOfficeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_patOfficeButtonActionPerformed
-        // TODO add your handling code here:
         String pn = getPN();
         PatentDocument pd = new PatentDocument(pn);
         switch (pd.getCountry()) {
@@ -410,6 +406,80 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_patOfficeButtonActionPerformed
 
+    private PatentTreeNode getSimpleNode() {
+        PatentCollectionList root = new PatentCollectionList();
+        int selColIndex = getColumnIndex("Select");
+        for (int j=0; j<jTable1.getRowCount(); j++) {
+            if ((boolean)jTable1.getValueAt(j,selColIndex)==true) {
+                int modelRow = jTable1.convertRowIndexToModel(j);
+                JSONObject pbFam = myJOb.getJSONArray("Families")
+                        .getJSONObject(modelRow);
+                String pn = pbFam.getString("PatentNumber");
+                {
+                    //need to re-write PNFormat!
+                    if (Character.isLetter(pn.charAt(pn.length()-2))) {
+                        pn = pn.substring(0, pn.length()-2);
+                    } else if (Character.isLetter(pn.charAt(pn.length()-1))) {
+                        pn = pn.substring(0, pn.length()-1);
+                    }
+                }
+                PatentDocument doc = new PatentDocument(pn);
+                root.addChild(doc);
+            }
+        }
+        if (root.size()==0) root = null;
+        return root;
+    }
+    
+    private PatentTreeNode getBranchedNode() {
+        PatentCollectionMap rootNode = new PatentCollectionMap();
+        int selColIndex = getColumnIndex("Select");
+        for (int j=0; j<jTable1.getRowCount(); j++) {
+            if ((boolean)jTable1.getValueAt(j,selColIndex)==true) {
+                int modelRow = jTable1.convertRowIndexToModel(j);
+                JSONObject pbFam = myJOb.getJSONArray("Families")
+                        .getJSONObject(modelRow);
+                String projectName = pbFam.getString("ProjectName");
+                PatentCollectionList projectNode;
+                if (rootNode.containsKey(projectName)) {
+                    projectNode = (PatentCollectionList) rootNode.get(projectName);
+                } else {
+                    projectNode = new PatentCollectionList(projectName);
+                    rootNode.addChild(projectNode);
+                }
+                String pn = pbFam.getString("PatentNumber");
+                PatentDocument doc = new PatentDocument(pn);
+                projectNode.addChild(doc);
+            }
+        }
+        if (rootNode.size()==0) rootNode = null;
+        return rootNode;
+    }
+    
+    private PatentTreeNode getTreeNode() {
+        PatentTreeNode rootNode;
+        int branchIndex = getColumnIndex("Project");
+        if (branchIndex==-1) {
+            rootNode = getSimpleNode();
+        } else {
+            rootNode = getBranchedNode();
+        }
+        return rootNode;
+    }
+    
+    private void treeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_treeMenuItemActionPerformed
+        PatentTreeNode rootNode = getTreeNode();
+        if (rootNode==null) {
+            JOptionPane.showMessageDialog(rootPane, "No rows selected.");
+        } else {
+            java.awt.EventQueue.invokeLater(() -> {
+                new TreeBranchEditor_2(rootNode, 
+                        PatbaseRestPlugin.coreAccess.getController())
+                        .setVisible(true);
+            });
+        }
+    }//GEN-LAST:event_treeMenuItemActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem deselectMenuItem;
     private javax.swing.JMenu jMenu1;
@@ -418,6 +488,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextArea jTextArea1;
@@ -425,6 +496,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     private javax.swing.JButton pbExpressButton;
     private javax.swing.JMenuItem saveMenuItem;
     private javax.swing.JMenuItem selectMenuItem;
+    private javax.swing.JMenuItem treeMenuItem;
     private javax.swing.JMenuItem writeMenuItem;
     // End of variables declaration//GEN-END:variables
 }

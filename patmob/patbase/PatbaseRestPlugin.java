@@ -1,6 +1,5 @@
 package patmob.patbase;
 
-import patmob.plugin.patbase.PatBaseQueryResultFormat;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,6 +22,8 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     //key = family name; value = projects which have this family
     private HashMap<String,String> familyProjectMap;
     private JSONObject allFamilies;
+    //smaller copy of SearchResultsBIB array
+    private final JSONArray dupFamilies = new JSONArray();
     
     @Override
     public String getName() {
@@ -105,33 +106,41 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             }
             
             for (int m=0; m<allFamilies.getJSONArray("Families").length(); m++){
-//                int memberCount = 0;
                 JSONObject o = allFamilies.getJSONArray("Families").getJSONObject(m);
                 o.put("ProjectName", familyProjectMap.get(o.getString("Family")));
                 o.put("PatentNumber", "");
                 o.put("PD", "");
-//                System.out.println(o.getString("Title"));
                 JSONArray pubs = o.getJSONArray("Publications");
                 o.put("mCount", pubs.length());
                 for (int n=0; n<pubs.length(); n++) {
                     JSONObject pub = pubs.getJSONObject(n);
                     String pnString = pub.getString("PN") + " " +
                             pub.getString("KD");// + " " +
-//                            pub.getString("PD");
-//                    System.out.println("UE: " + pub.getString("UE") + " :: " + pnString);
                     if (pub.getString("UE").equals(patbaseWeek) &&
                             (pub.getString("CC").equals("EP") ||
                             pub.getString("CC").equals("US") ||
                             pub.getString("CC").equals("WO"))) {
-                        o.put("PatentNumber", o.getString("PatentNumber") + 
-                                pnString + " ");
-                        o.put("PD", o.get("PD") + pub.getString("PD") + " ");
+                            JSONObject dupo = new JSONObject(o, 
+                                    new String[]{"Family",
+                                        "ProjectName",
+                                        "mCount",
+                                        "Title",
+                                        "ProbableAssignee",
+                                        "Abstract",
+                                        "FirstInventor"});
+                            dupo.put("PatentNumber", pnString);
+                            dupo.put("PD", pub.getString("PD"));
+                            dupFamilies.put(dupo);
                     }
                 }
             }
+            
+            allFamilies.put("Families", dupFamilies);
+            
             stopAlerts = false;
             java.awt.EventQueue.invokeLater(() -> {
-                new PatbaseTableFrame(allFamilies).setVisible(true);
+                new PatbaseTableFrame(allFamilies, PatbaseRestPlugin.this)
+                        .setVisible(true);
             });
             
         }
@@ -144,7 +153,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                     cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, sort, 
                     "Single query");
             qResult.put("ResultType", PatbaseRestApi.SEARCHRESULTS);
-            new PatbaseTableFrame(qResult).setVisible(true);
+            new PatbaseTableFrame(qResult, this).setVisible(true);
             frame.appendQueryLogText(qResult.getString("Results")
                     + " results for [" + cmd + "]");
         });
@@ -178,6 +187,5 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                 }
             }
         });
-        
     }
 }
