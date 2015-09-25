@@ -36,6 +36,9 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     }
     
     public void runAlerts(String queryFilePath, String updateCmd) {
+        coreAccess.getController().setPatmobProperty(
+                "patbaseAlertQueriesFile", queryFilePath);
+        coreAccess.getController().savePatmobProperties();
         familyProjectMap = new HashMap<>();                 
         allFamilies = new JSONObject().put("Families", new JSONArray());
         allFamilies.put("ResultType", PatbaseRestApi.SEARCHRESULTSBIB);
@@ -162,6 +165,8 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     private void showGui() {
         frame = new PatbaseQueryFrame(PatbaseRestPlugin.this);
         frame.setLogText("Sending HTTP POST request to PatBase API...");
+        frame.setQueryFileField(coreAccess.getController()
+                .getPatmobProperty("patbaseAlertQueriesFile"));
         frame.setVisible(true);
         
         java.awt.EventQueue.invokeLater(() -> {

@@ -4,9 +4,15 @@ import java.awt.Desktop;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.net.URL;
+import javax.swing.DefaultCellEditor;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import org.json.JSONArray;
@@ -49,7 +55,37 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                     "\n  Title: " + enTitle(pbFam) +
                     "\n  Abstract: " + enAbstract(pbFam)
             );
-        });        
+        });
+        
+        jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
+            int row = e.getFirstRow();
+            int column = e.getColumn();
+            TableModel model = (TableModel)e.getSource();
+            String columnName = model.getColumnName(column);
+            Object newData = model.getValueAt(row, column);
+//            System.out.println(newData + " in column " + columnName);
+            
+            if (columnName.equals("Project")) {
+                int modelRow = jTable1.convertRowIndexToModel(row);
+                JSONObject pbFam = 
+                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
+                pbFam.put("ProjectName", newData);
+            }
+        });
+        
+//        CellEditorListener myListener = new CellEditorListener(){
+//            @Override
+//            public void editingStopped(ChangeEvent e) {
+//                JTextField field = (JTextField) 
+//                        ((DefaultCellEditor) e.getSource()).getComponent();
+//                System.out.println(field.getText());}
+//            public void editingCanceled(ChangeEvent e) {}
+//        };
+//        DefaultCellEditor myEditor = new DefaultCellEditor(new JTextField());
+//        myEditor.addCellEditorListener(myListener);
+//        jTable1.setDefaultEditor(String.class, myEditor);
+                
+                        
     }
     
     private String enTitle(JSONObject o) {
