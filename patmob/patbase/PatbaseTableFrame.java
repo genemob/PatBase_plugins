@@ -4,15 +4,10 @@ import java.awt.Desktop;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.net.URL;
-import javax.swing.DefaultCellEditor;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import org.json.JSONArray;
@@ -39,6 +34,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jTable1.getColumn("Select").setMaxWidth(45);
         jTable1.getColumn("Select").setResizable(false);
         
+        // display detail about the selected row
         jTable1.getSelectionModel().addListSelectionListener(
                 // *** lambda expression ***
                 (ListSelectionEvent event) -> {
@@ -46,8 +42,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             final int modelRow = jTable1.convertRowIndexToModel(viewRow);
             JSONObject pbFam = 
                     myJOb.getJSONArray("Families").getJSONObject(modelRow);
-            
-            jTextArea1.setText(
+            showInfo(
                     "  Patent Number: " + pbFam.getString("PatentNumber") +
                     "\n  PatBase Family: " + pbFam.getString("Family") +
                     "\n\n  Probable Assignee: " + pbFam.getString("ProbableAssignee") +
@@ -57,14 +52,13 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             );
         });
         
+        // update data if user edited project name
         jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
             int row = e.getFirstRow();
             int column = e.getColumn();
             TableModel model = (TableModel)e.getSource();
             String columnName = model.getColumnName(column);
             Object newData = model.getValueAt(row, column);
-//            System.out.println(newData + " in column " + columnName);
-            
             if (columnName.equals("Project")) {
                 int modelRow = jTable1.convertRowIndexToModel(row);
                 JSONObject pbFam = 
@@ -72,20 +66,10 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                 pbFam.put("ProjectName", newData);
             }
         });
-        
-//        CellEditorListener myListener = new CellEditorListener(){
-//            @Override
-//            public void editingStopped(ChangeEvent e) {
-//                JTextField field = (JTextField) 
-//                        ((DefaultCellEditor) e.getSource()).getComponent();
-//                System.out.println(field.getText());}
-//            public void editingCanceled(ChangeEvent e) {}
-//        };
-//        DefaultCellEditor myEditor = new DefaultCellEditor(new JTextField());
-//        myEditor.addCellEditorListener(myListener);
-//        jTable1.setDefaultEditor(String.class, myEditor);
-                
-                        
+    }
+    
+    public void showInfo(String s) {
+        jTextArea1.setText(s);
     }
     
     private String enTitle(JSONObject o) {

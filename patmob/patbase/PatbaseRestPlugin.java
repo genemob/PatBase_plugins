@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import patmob.core.PatmobPlugin;
@@ -23,7 +24,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     private HashMap<String,String> familyProjectMap;
     private JSONObject allFamilies;
     //smaller copy of SearchResultsBIB array
-    private final JSONArray dupFamilies = new JSONArray();
+    private JSONArray dupFamilies;
     
     @Override
     public String getName() {
@@ -42,6 +43,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
         familyProjectMap = new HashMap<>();                 
         allFamilies = new JSONObject().put("Families", new JSONArray());
         allFamilies.put("ResultType", PatbaseRestApi.SEARCHRESULTSBIB);
+        dupFamilies = new JSONArray();
         
         ArrayList<String> jobs = new ArrayList<>();
         try {
@@ -66,6 +68,52 @@ public class PatbaseRestPlugin implements PatmobPlugin {
         stopAlerts = true;
     }
 
+    /**
+     * Get the specific data for each publication, using the getMember method
+     * of PatBase API, and use it to update the table.
+     * If no data for EP publication, call EP Register to get the corresponding
+     * WO "Publication Reference", and use it at PatBase API.
+     */
+    private class AlertUpdater implements Runnable {
+        PatbaseTableFrame table;
+        
+        public AlertUpdater(PatbaseTableFrame ptf) {
+            table = ptf;
+        }
+        
+        @Override
+        public void run() {
+            for (int m=0; m<allFamilies.getJSONArray("Families").length(); m++){
+                JSONObject o = allFamilies.getJSONArray("Families").getJSONObject(m);
+                String pn = o.getString("PatentNumber");
+                
+                System.out.println("PN: " + pn);
+                JSONObject memberData = PatbaseRestApi.runMethod(
+                        PatbaseRestApi.GETMEMBER,
+                        new BasicNameValuePair("pn", pn.substring(0, pn.indexOf(" "))),
+                        new BasicNameValuePair("ft", "true"));
+                
+                System.out.println("PA: " + memberData.getString("ProbableAssignee"));
+                System.out.println("TI: " + memberData.getString("Title"));
+                System.out.println("AB: " + memberData.getString("Abstract"));
+                
+                String claimsTxt = memberData.getJSONArray("FullText")
+                        .getJSONObject(0).getString("Claims");
+                int start = claimsTxt.indexOf("[FTIMG");
+                if (start>-1) {
+                    int end = claimsTxt.indexOf("]", start);
+                    System.out.println(claimsTxt.substring(start+7, end));
+                } else System.out.println("no img");
+                System.out.println();
+                
+//                table.showInfo(pn);
+                try {
+//                    Thread.sleep(1000);
+                } catch (Exception x) {}
+            }            
+        }
+    }
+    
     private class AlertRunner implements Runnable {
         String[] allQueries;
         String updateCmd;
@@ -141,9 +189,13 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             allFamilies.put("Families", dupFamilies);
             
             stopAlerts = false;
+            
             java.awt.EventQueue.invokeLater(() -> {
-                new PatbaseTableFrame(allFamilies, PatbaseRestPlugin.this)
-                        .setVisible(true);
+                PatbaseTableFrame table = new PatbaseTableFrame(allFamilies, PatbaseRestPlugin.this);
+                table.setVisible(true);
+                
+                AlertUpdater alertUpdater = new AlertUpdater(table);
+                new Thread(alertUpdater).start();
             });
             
         }
