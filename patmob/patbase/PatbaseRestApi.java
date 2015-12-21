@@ -54,7 +54,7 @@ public class PatbaseRestApi extends PatbaseRestClient{
         JSONObject jOb = null;
         try {
             jOb = runMethod(QUERY, new BasicNameValuePair("query", query));
-System.out.println(jOb.toString());
+//System.out.println(jOb.toString());
             String qKey = jOb.getString("QueryKey"),
                     resultCount = jOb.getString("Results");
             if (to == null) {

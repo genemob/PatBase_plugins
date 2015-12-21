@@ -1,15 +1,20 @@
 package patmob.patbase;
 
 import java.awt.Desktop;
+import java.awt.Rectangle;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import patmob.convert.PNFormat;
@@ -28,39 +33,59 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             PatbaseRestPlugin parent) {
         plugin = parent;
         myJOb = patbaseSearchResults;
+//        
+//        System.out.println(myJOb.toString(2));
+//        
         myModel = getCustomModel(myJOb);
         initComponents();
         jTable1.setAutoCreateRowSorter(true);
         jTable1.getColumn("Select").setMaxWidth(45);
         jTable1.getColumn("Select").setResizable(false);
         
-        // display detail about the selected row
+        // display detail about the selected modelRow
         jTable1.getSelectionModel().addListSelectionListener(
                 // *** lambda expression ***
                 (ListSelectionEvent event) -> {
             int viewRow = jTable1.getSelectedRow();
             final int modelRow = jTable1.convertRowIndexToModel(viewRow);
+//System.out.println("modelRow: " + modelRow);
+//System.out.println("myModel: " + myModel.getValueAt(modelRow, 1));
+//System.out.println("pbFam: " + myJOb.getJSONArray("Families").getJSONObject(modelRow).getString("ProjectName"));
             JSONObject pbFam = 
-                    myJOb.getJSONArray("Families").getJSONObject(modelRow);
+                    myJOb.getJSONArray("Families").getJSONObject(modelRow),
+                    ueMember = pbFam.getJSONObject("UpdateMember");
             showInfo(
-                    "  Patent Number: " + pbFam.getString("PatentNumber") +
-                    "\n  PatBase Family: " + pbFam.getString("Family") +
-                    "\n\n  Probable Assignee: " + pbFam.getString("ProbableAssignee") +
-                    "\n  First Inventor: " + pbFam.getString("FirstInventor") +
-                    "\n  Title: " + enTitle(pbFam) +
-                    "\n  Abstract: " + enAbstract(pbFam)
+                    "<html>" +
+                    "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
+                    "<b>Basic Publication</b>: " + pbFam.getString("PatentNumber") +  "<br>" +
+                    "<b>Number of Family Members</b>: " + pbFam.getInt("mCount") +  "<br>" +
+                    "<b>Probable Assignee</b>: " + pbFam.getString("ProbableAssignee") + "<br>" +
+                    "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
+                    "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
+                    "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
+                    "<hr><p/>" + 
+                            "<b>PN</b>: <span style=\"color:red\">" + pbFam.getString("uePatentNumber") + "</span><br>" +
+                            "<b>PD</b>: " + pbFam.getString("PD") + "<br>" +
+                            "<b>REG</b>: " + ueMember.getString("REG") + "<br>" +
+                            "<b>PA</b>: " + ueMember.getString("PA") + "<br>" +
+                            "<b>TI</b>: " + ueMember.getString("TI") + "<br>" +
+                            "<b>AB</b>: " + ueMember.getString("AB") + "<br>" +
+                            "<b>IMG</b>: " + ueMember.getString("IMG") + "<br>" +
+                            "<b>CL</b>: " + ueMember.getString("CL") +
+                    "</html>"
             );
         });
         
         // update data if user edited project name
         jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
-            int row = e.getFirstRow();
+            int modelRow = e.getFirstRow();
             int column = e.getColumn();
             TableModel model = (TableModel)e.getSource();
             String columnName = model.getColumnName(column);
-            Object newData = model.getValueAt(row, column);
+            Object newData = model.getValueAt(modelRow, column);
             if (columnName.equals("Project")) {
-                int modelRow = jTable1.convertRowIndexToModel(row);
+//                int modelRow = jTable1.convertRowIndexToModel(modelRow);
+//System.out.println("modelRow_ed: " + modelRow);
                 JSONObject pbFam = 
                         myJOb.getJSONArray("Families").getJSONObject(modelRow);
                 pbFam.put("ProjectName", newData);
@@ -68,8 +93,21 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         });
     }
     
+//    String cleanup(String txt) {
+////        txt = txt.substring(5, txt.length()-5);
+////        txt = txt.replace('\u001B', ' ');
+////        txt = txt.substring(1, txt.length()-1);
+//        txt = txt.replace("\\", "");
+//        return txt;
+//    }
+            
     public void showInfo(String s) {
-        jTextArea1.setText(s);
+        // http://stackoverflow.com/questions/5350722/
+        //disabling-scrolling-to-end-of-text-in-jeditorpane
+        final DefaultCaret caret = (DefaultCaret) jEditorPane1.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+        //!!!!text must be set AFTER update policy has been set!!!!!     
+        jEditorPane1.setText(s);
     }
     
     private String enTitle(JSONObject o) {
@@ -137,21 +175,21 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             data[i] = new Object[]{
                 false,
                 o.getString("ProjectName"),
-                o.getString("Title"),
-                o.getString("ProbableAssignee"),
-                o.getString("PatentNumber"),
+                o.getString("uePatentNumber"),
                 o.getString("PD"),
-                o.getInt("mCount")
+                o.getString("Title"),
+                o.getString("ProbableAssignee")
+//                o.getInt("mCount")
             };
         }
         Object[] colNames = new Object[]{
             "Select",
             "Project",
-            "Title",
-            "ProbableAssignee",
             "PatentNumber",
             "Date",
-            "Count"
+            "Title",
+            "ProbableAssignee"
+//            "Count"
         };   
         return new DefaultTableModel(data, colNames){
             //override getColumnClass to render boolean as checkbox
@@ -172,7 +210,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         pbExpressButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
+        jEditorPane1 = new javax.swing.JEditorPane();
         patOfficeButton = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
@@ -202,11 +240,9 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
             }
         });
 
-        jTextArea1.setColumns(20);
-        jTextArea1.setLineWrap(true);
-        jTextArea1.setRows(5);
-        jTextArea1.setWrapStyleWord(true);
-        jScrollPane2.setViewportView(jTextArea1);
+        jEditorPane1.setEditable(false);
+        jEditorPane1.setContentType("text/html");
+        jScrollPane2.setViewportView(jEditorPane1);
 
         patOfficeButton.setText("Patent Office");
         patOfficeButton.addActionListener(new java.awt.event.ActionListener() {
@@ -314,7 +350,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         final int modelRow = jTable1.convertRowIndexToModel(viewRow);
         JSONObject pbFam = 
                 myJOb.getJSONArray("Families").getJSONObject(modelRow);
-        String pn = pbFam.getString("PatentNumber");
+        String pn = pbFam.getString("uePatentNumber");
         if (pn.contains(" ")) {
             pn = pn.substring(0, pn.indexOf(" "));
         } else {
@@ -467,7 +503,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
                     projectNode = new PatentCollectionList(projectName);
                     rootNode.addChild(projectNode);
                 }
-                String pn = pbFam.getString("PatentNumber");
+                String pn = pbFam.getString("uePatentNumber");
                 PatentDocument doc = new PatentDocument(pn);
                 projectNode.addChild(doc);
             }
@@ -502,6 +538,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem deselectMenuItem;
+    private javax.swing.JEditorPane jEditorPane1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
@@ -511,7 +548,6 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTable jTable1;
-    private javax.swing.JTextArea jTextArea1;
     private javax.swing.JButton patOfficeButton;
     private javax.swing.JButton pbExpressButton;
     private javax.swing.JMenuItem saveMenuItem;
