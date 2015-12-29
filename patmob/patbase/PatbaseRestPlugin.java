@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import patmob.core.PatmobPlugin;
 import patmob.data.ops.impl.register.AllPubsRegisterRequest;
 import patmob.data.ops.impl.register.RegisterRequestParams;
+import patmob.patbase.table.PatbaseAlertTableFrame;
 
 /**
  *
@@ -71,15 +72,15 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     }
 
     /**
-     * Get the specific data for each publication, using the getMember method
+     * Get the specific data for each publication, using the GetMember method
      * of PatBase API, and use it to update the table.
      * If no data for EP publication, call EP Register to get the corresponding
      * WO "Publication Reference", and use it at PatBase API.
      */
     private class AlertUpdater implements Runnable {
-        PatbaseTableFrame table;
+        PatbaseAlertTableFrame table;
         
-        public AlertUpdater(PatbaseTableFrame ptf) {
+        public AlertUpdater(PatbaseAlertTableFrame ptf) {
             table = ptf;
         }
         
@@ -88,72 +89,93 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             for (int m=0; m<allFamilies.getJSONArray("Families").length(); m++){
                 JSONObject family = allFamilies.getJSONArray("Families")
                         .getJSONObject(m);
-                String pn = family.getString("uePatentNumber");
-//                // kind code is appended
-//                if (Character.isLetter(pn.charAt(pn.length()-2))) {
-//                    pn = pn.substring(0, pn.length()-2);
-//                } else if (Character.isLetter(pn.charAt(pn.length()-1))) {
-//                    pn = pn.substring(0, pn.length()-1);
-//                }
-                
-//                JSONObject updateMember = new JSONObject();
-//                family.put("UpdateMember", new JSONObject());
-                
-                System.out.println("PN: " + pn);
-                JSONObject memberData = PatbaseRestApi.runMethod(
+                String uePN = family.getString("uePatentNumber");
+                String[] p = uePN.split(" ");
+                System.out.println("PN: " + uePN);
+                JSONObject equivalentData = PatbaseRestApi.runMethod(
                         PatbaseRestApi.GETMEMBER,
-                        new BasicNameValuePair("pn", pn.substring(0, pn.indexOf(" "))),
+                        new BasicNameValuePair("pn", p[0]),
+                        new BasicNameValuePair("kd", p[1]),
                         new BasicNameValuePair("ft", "true"));
                 
-                if (memberData!=null) {
+                if (equivalentData!=null) {
                     try {
-                        JSONObject updateMember = family.getJSONObject("UpdateMember");
-                        updateMember.put("PA", memberData.getString("ProbableAssignee"));
-                        updateMember.put("TI", memberData.getString("Title"));
-                        updateMember.put("AB", memberData.getString("Abstract"));
-
-                        String claimsTxt = memberData.getJSONArray("FullText")
+                        String claimsTxt = equivalentData.getJSONArray("FullText")
                                 .getJSONObject(0).getString("Claims");
-                        
-                        // * Get mosaic
-////                        String[] pnData = pn.split(" ");
-////                        updateMember.put("IMG", 
-////                                "<img src=\"http://www.patbase.com/phpmosaic/getone.php?pn=" 
-////                                        + pnData[0] + 
-////                                        "&kd=" + pnData[1] +
-////                                        "&pg=1\" height=\"150\" width=\"150\">");
+                        String imgData = "";
                         
                         // * Get images from claims
                         int start = claimsTxt.indexOf("[FTIMG");
                         if (start>-1) {
                             int end = claimsTxt.indexOf("]", start);
                             String id = claimsTxt.substring(start+7, end);
-                            updateMember.put("IMG", 
-                                    "<img src=\"https://www.patbase.com/getimg/ftimg.asp?id=" 
-                                            + id + "\" height=\"150\" width=\"150\">");
-                        } else updateMember.put("IMG", "no img");
-
-//                        claimsTxt = claimsTxt.substring(1, claimsTxt.length()-1);
-//                        claimsTxt = claimsTxt.replace("\\", "");
+                            imgData = "<img src=\"https://www.patbase.com/getimg/ftimg.asp?id=" + id + "\" width=200px>";// height=\"150\" width=\"150\">";
+                        }
+                        // * Get mosaic
+//                        String[] pnData = uePN.split(" ");
+//                        imgData = "<img src=\"http://www.patbase.com/phpmosaic/getone.php?uePN=" 
+//                                        + pnData[0] + 
+//                                        "&kd=" + pnData[1] +
+//                                        "&pg=1\" height=\"150\" width=\"150\">";
+                        
+                        JSONObject updateMember = family.getJSONObject("UpdateMember");
+                        updateMember.put("PA", equivalentData.optString("ProbableAssignee"));
+                        updateMember.put("TI", equivalentData.optString("Title"));
+                        updateMember.put("AB", equivalentData.optString("Abstract"));
+                        updateMember.put("IMG", imgData);
                         updateMember.put("CL", claimsTxt);
                         
-                        updateMember.put("REG", getPubsFromRegister(pn.substring(0, pn.indexOf(" "))));
-                    } catch (Exception x) {System.out.println(x);}
+                        if (uePN.startsWith("EP")) {
+                            String allPubs = getPubsFromRegister(p[0]);
+                            updateMember.put("REG", allPubs);
+                            //check the WO for missing data
+                            if ((claimsTxt.equals("")||updateMember.optString("AB").equals("")) && allPubs.contains("WO")) {
+                                String woPN = allPubs.substring(allPubs.indexOf("WO"), allPubs.indexOf(" ", allPubs.indexOf("WO")));
+                                woPN = woPN.substring(0,2) + woPN.substring(4);
+                                JSONObject equivalentData2 = PatbaseRestApi.runMethod(
+                                        PatbaseRestApi.GETMEMBER,
+                                        new BasicNameValuePair("pn", woPN),
+                                        new BasicNameValuePair("ft", "true"));
+                                claimsTxt = equivalentData2.optJSONArray("FullText").getJSONObject(0).optString("Claims");
+                                String imgData2 = "";
+                                start = claimsTxt.indexOf("[FTIMG");
+                                if (start>-1) {
+                                    int end = claimsTxt.indexOf("]", start);
+                                    String id = claimsTxt.substring(start+7, end);
+                                    imgData2 = "<img src=\"https://www.patbase.com/getimg/ftimg.asp?id=" 
+                                                    + id + "\" width=200px>"; // height=\"150\"
+                                }
+                                updateMember.put("PA", updateMember.optString("PA") + " :: (" +woPN+") "+ equivalentData2.optString("ProbableAssignee"));
+                                updateMember.put("TI", updateMember.optString("TI") + " :: (" +woPN+") "+ equivalentData2.optString("Title"));
+                                updateMember.put("AB", updateMember.optString("AB") + " :: (" +woPN+") "+ equivalentData2.optString("Abstract"));
+                                updateMember.put("IMG", updateMember.optString("IMG") + " :: (" +woPN+") "+ imgData2);
+                                updateMember.put("CL", updateMember.optString("CL") + " :: (" +woPN+") "+ claimsTxt);
+                            } else {
+                                // check application for abstract missing in B1/B2
+                                if (updateMember.optString("AB").equals("") && (uePN.endsWith("B1")||uePN.endsWith("B2"))) {
+                                    JSONObject equivalentData3 = PatbaseRestApi.runMethod(
+                                            PatbaseRestApi.GETMEMBER,
+                                            new BasicNameValuePair("pn", p[0]));
+                                    updateMember.put("AB", updateMember.optString("AB") + " :: "+ equivalentData3.optString("Abstract"));
+                                }
+                            }
+                        }
+                    } catch (Exception x) {System.out.println("AlertUpdater: " + x);}
                 }
-            }            
+            }
         }
     }
     
     private String getPubsFromRegister(String pn) {
         String allPubs = "";
-        if (pn.startsWith("EP")) {
+        try {
             RegisterRequestParams searchParams = 
                     new RegisterRequestParams(new String[]{pn});
             AllPubsRegisterRequest rr = new AllPubsRegisterRequest(searchParams);
             searchParams = rr.submitCall();
             ArrayList<String> rows = searchParams.getResultRows();
             allPubs = rows.get(0);
-        }
+        } catch (Exception x) {System.out.println("getPubsFromRegister: " + x);}
         return allPubs;
     }
     
@@ -198,7 +220,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                         }
                     }
                 } else {
-                    frame.appendLogText("No records");
+                    frame.appendLogText("----------");
                 }
             }
             
@@ -209,8 +231,6 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             for (int m=0; m<allFamilies.getJSONArray("Families").length(); m++){
                 JSONObject o = allFamilies.getJSONArray("Families").getJSONObject(m);
                 o.put("ProjectName", familyProjectMap.get(o.getString("Family")));
-//                o.put("uePatentNumber", "");
-//                o.put("PD", "");
                 JSONArray pubs = o.getJSONArray("Publications");
                 o.put("mCount", pubs.length());
                 for (int n=0; n<pubs.length(); n++) {
@@ -243,7 +263,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             stopAlerts = false;
             
             java.awt.EventQueue.invokeLater(() -> {
-                PatbaseTableFrame table = new PatbaseTableFrame(allFamilies, PatbaseRestPlugin.this);
+                PatbaseAlertTableFrame table = new PatbaseAlertTableFrame(allFamilies, PatbaseRestPlugin.this);
                 table.setVisible(true);
                 
                 AlertUpdater alertUpdater = new AlertUpdater(table);
