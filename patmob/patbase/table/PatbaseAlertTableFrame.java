@@ -18,8 +18,10 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.text.DefaultCaret;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import patmob.convert.PNFormat;
+import patmob.core.PatmobPlugin;
 import patmob.core.TreeBranchEditor_2;
 import patmob.data.PatentCollectionList;
 import patmob.data.PatentCollectionMap;
@@ -33,9 +35,9 @@ import patmob.data.PatentTreeNode;
 public class PatbaseAlertTableFrame extends javax.swing.JFrame {
     TableModel tableModel = null;
     JSONObject alertResults = null;
-    PatbaseRestPlugin plugin;
+    PatmobPlugin plugin;
 
-    public PatbaseAlertTableFrame(JSONObject result, PatbaseRestPlugin p) {
+    public PatbaseAlertTableFrame(JSONObject result, PatmobPlugin p) {
         plugin = p;
         alertResults = result;
         tableModel = getCustomModel(alertResults);
@@ -271,11 +273,15 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
 
         jMenu1.setText("File");
 
-        saveMenuItem.setText("Save to Database...");
-        saveMenuItem.setEnabled(false);
+        saveMenuItem.setText("Save to JSON File...");
+        saveMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveMenuItemActionPerformed(evt);
+            }
+        });
         jMenu1.add(saveMenuItem);
 
-        writeMenuItem.setText("Write to File...");
+        writeMenuItem.setText("Write to HTML Table File...");
         writeMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 writeMenuItemActionPerformed(evt);
@@ -407,6 +413,7 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
     String blue = "#9999FF",
             red = "#FF9999",
             projectHilite;
+    
     void writeProject(JSONArray project, BufferedWriter bw) throws IOException {
         if (projectHilite.equals(red)) {
             projectHilite = blue;
@@ -417,9 +424,6 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
             JSONObject pbFam = project.getJSONObject(i);
             bw.write(getTableRow(pbFam, projectHilite));
             bw.flush();
-            
-            
-//            System.out.println(pbFam.optString("ProjectName") + ": " + pbFam.optString("uePatentNumber"));
         }
     }
     
@@ -542,7 +546,8 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
                 "<td>" + parseDate(pbFam.optString("PD")) + "</td>" + 
                 "<td>" + parseMemberString(ueMember.optString("TI")) + "</td>" + 
                 "<td>" + parseMemberString(ueMember.optString("PA")) + "</td>" + 
-                "<td style=\"width:200px\">" + parseMemberString(ueMember.optString("IMG")) + "</td>" + 
+                "<td style=\"width:200px\">" + parseMemberString(ueMember.optString("IMG"))
+                        .replace(">", " width=200px>") + "</td>" +              // img tag in the table displays full-size image
                 "<td style=\"width:650px\">" + parseMemberString(ueMember.optString("AB")) + "</td>" +  
                 "</tr>";
         return row;
@@ -645,6 +650,21 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
     private void selectMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectMenuItemActionPerformed
         setCheckboxes(true);
     }//GEN-LAST:event_selectMenuItemActionPerformed
+
+    private void saveMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveMenuItemActionPerformed
+            JFileChooser fc = new JFileChooser();
+            int i = fc.showSaveDialog(null);
+            if (i==JFileChooser.APPROVE_OPTION) {
+                try {
+                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(
+                            fc.getSelectedFile()))) {
+                        bw.write(alertResults.toString(2));
+                    }
+                } catch (IOException | JSONException x) {
+                    System.out.println("PatbaseAlertTableFrame.JSON: " + x);
+                }
+            }
+    }//GEN-LAST:event_saveMenuItemActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem deselectMenuItem;

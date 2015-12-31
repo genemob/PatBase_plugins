@@ -109,7 +109,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                         if (start>-1) {
                             int end = claimsTxt.indexOf("]", start);
                             String id = claimsTxt.substring(start+7, end);
-                            imgData = "<img src=\"https://www.patbase.com/getimg/ftimg.asp?id=" + id + "\" width=200px>";// height=\"150\" width=\"150\">";
+                            imgData = "<img src=\"https://www.patbase.com/getimg/ftimg.asp?id=" + id + "\">";// height=\"150\" width=\"150\">";
                         }
                         // * Get mosaic
 //                        String[] pnData = uePN.split(" ");
@@ -143,13 +143,13 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                                     int end = claimsTxt.indexOf("]", start);
                                     String id = claimsTxt.substring(start+7, end);
                                     imgData2 = "<img src=\"https://www.patbase.com/getimg/ftimg.asp?id=" 
-                                                    + id + "\" width=200px>"; // height=\"150\"
+                                                    + id + "\">"; // width=200px height=\"150\"
                                 }
-                                updateMember.put("PA", updateMember.optString("PA") + " :: (" +woPN+") "+ equivalentData2.optString("ProbableAssignee"));
-                                updateMember.put("TI", updateMember.optString("TI") + " :: (" +woPN+") "+ equivalentData2.optString("Title"));
-                                updateMember.put("AB", updateMember.optString("AB") + " :: (" +woPN+") "+ equivalentData2.optString("Abstract"));
-                                updateMember.put("IMG", updateMember.optString("IMG") + " :: (" +woPN+") "+ imgData2);
-                                updateMember.put("CL", updateMember.optString("CL") + " :: (" +woPN+") "+ claimsTxt);
+                                updateMember.put("PA", updateMember.optString("PA") + " :: (" +woPN+") " + equivalentData2.optString("ProbableAssignee"));
+                                updateMember.put("TI", updateMember.optString("TI") + " :: (" +woPN+") " + equivalentData2.optString("Title"));
+                                updateMember.put("AB", updateMember.optString("AB") + " :: (" +woPN+") " + equivalentData2.optString("Abstract"));
+                                updateMember.put("IMG", updateMember.optString("IMG") + " :: (" +woPN+") " + imgData2);
+                                updateMember.put("CL", updateMember.optString("CL") + " :: (" +woPN+") " + claimsTxt);
                             } else {
                                 // check application for abstract missing in B1/B2
                                 if (updateMember.optString("AB").equals("") && (uePN.endsWith("B1")||uePN.endsWith("B2"))) {
