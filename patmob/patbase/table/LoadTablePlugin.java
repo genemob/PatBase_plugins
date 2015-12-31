@@ -26,10 +26,19 @@ public class LoadTablePlugin implements PatmobPlugin {
         if (i==JFileChooser.APPROVE_OPTION) {
             try {
                 FileInputStream fis = new FileInputStream(fc.getSelectedFile());
-                JSONObject tableContent = new JSONObject(new JSONTokener(fis));
-                java.awt.EventQueue.invokeLater(() -> {
-                    new PatbaseAlertTableFrame(tableContent, LoadTablePlugin.this)
-                            .setVisible(true);
+                final JSONObject tableContent = new JSONObject(new JSONTokener(fis));
+                // Java 8
+//                java.awt.EventQueue.invokeLater(() -> {
+//                    new PatbaseAlertTableFrame(tableContent, LoadTablePlugin.this)
+//                            .setVisible(true);
+//                });
+                // Java 7
+                java.awt.EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        new PatbaseAlertTableFrame(tableContent, LoadTablePlugin.this)
+                                .setVisible(true);
+                    }
                 });
             } catch (FileNotFoundException | JSONException x) {
                 System.out.println("LoadTablePlugin: " + x);
