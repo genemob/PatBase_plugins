@@ -11,13 +11,15 @@
           <SubComponents>
             <MenuItem class="javax.swing.JMenuItem" name="saveMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Save to Database..."/>
-                <Property name="enabled" type="boolean" value="false"/>
+                <Property name="text" type="java.lang.String" value="Save to JSON File..."/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveMenuItemActionPerformed"/>
+              </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="writeMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Write to File..."/>
+                <Property name="text" type="java.lang.String" value="Write to HTML Table File..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="writeMenuItemActionPerformed"/>
