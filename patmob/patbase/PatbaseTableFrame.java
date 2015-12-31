@@ -10,7 +10,9 @@ import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.text.BadLocationException;
@@ -43,52 +45,109 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jTable1.getColumn("Select").setResizable(false);
         
         // display detail about the selected modelRow
-        jTable1.getSelectionModel().addListSelectionListener(
-                // *** lambda expression ***
-                (ListSelectionEvent event) -> {
-            int viewRow = jTable1.getSelectedRow();
-            final int modelRow = jTable1.convertRowIndexToModel(viewRow);
-//System.out.println("modelRow: " + modelRow);
-//System.out.println("myModel: " + myModel.getValueAt(modelRow, 1));
-//System.out.println("pbFam: " + myJOb.getJSONArray("Families").getJSONObject(modelRow).getString("ProjectName"));
-            JSONObject pbFam = 
-                    myJOb.getJSONArray("Families").getJSONObject(modelRow),
-                    ueMember = pbFam.getJSONObject("UpdateMember");
-            showInfo(
-                    "<html>" +
-                    "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
-                    "<b>Basic Publication</b>: " + pbFam.getString("PatentNumber") +  "<br>" +
-                    "<b>Number of Family Members</b>: " + pbFam.getInt("mCount") +  "<br>" +
-                    "<b>Probable Assignee</b>: " + pbFam.getString("ProbableAssignee") + "<br>" +
-                    "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
-                    "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
-                    "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
-                    "<hr><p/>" + 
-                            "<b>PN</b>: <span style=\"color:red\">" + pbFam.getString("uePatentNumber") + "</span><br>" +
-                            "<b>PD</b>: " + pbFam.getString("PD") + "<br>" +
-                            "<b>REG</b>: " + ueMember.getString("REG") + "<br>" +
-                            "<b>PA</b>: " + ueMember.getString("PA") + "<br>" +
-                            "<b>TI</b>: " + ueMember.getString("TI") + "<br>" +
-                            "<b>AB</b>: " + ueMember.getString("AB") + "<br>" +
-                            "<b>IMG</b>: " + ueMember.getString("IMG") + "<br>" +
-                            "<b>CL</b>: " + ueMember.getString("CL") +
-                    "</html>"
-            );
-        });
         
-        // update data if user edited project name
-        jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
-            int modelRow = e.getFirstRow();
-            int column = e.getColumn();
-            TableModel model = (TableModel)e.getSource();
-            String columnName = model.getColumnName(column);
-            Object newData = model.getValueAt(modelRow, column);
-            if (columnName.equals("Project")) {
-//                int modelRow = jTable1.convertRowIndexToModel(modelRow);
-//System.out.println("modelRow_ed: " + modelRow);
+        // Java *
+//        jTable1.getSelectionModel().addListSelectionListener(
+//                // *** lambda expression ***
+//                (ListSelectionEvent event) -> {
+//            int viewRow = jTable1.getSelectedRow();
+//            final int modelRow = jTable1.convertRowIndexToModel(viewRow);
+////System.out.println("modelRow: " + modelRow);
+////System.out.println("myModel: " + myModel.getValueAt(modelRow, 1));
+////System.out.println("pbFam: " + myJOb.getJSONArray("Families").getJSONObject(modelRow).getString("ProjectName"));
+//            JSONObject pbFam = 
+//                    myJOb.getJSONArray("Families").getJSONObject(modelRow),
+//                    ueMember = pbFam.getJSONObject("UpdateMember");
+//            showInfo(
+//                    "<html>" +
+//                    "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
+//                    "<b>Basic Publication</b>: " + pbFam.getString("PatentNumber") +  "<br>" +
+//                    "<b>Number of Family Members</b>: " + pbFam.getInt("mCount") +  "<br>" +
+//                    "<b>Probable Assignee</b>: " + pbFam.getString("ProbableAssignee") + "<br>" +
+//                    "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
+//                    "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
+//                    "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
+//                    "<hr><p/>" + 
+//                            "<b>PN</b>: <span style=\"color:red\">" + pbFam.getString("uePatentNumber") + "</span><br>" +
+//                            "<b>PD</b>: " + pbFam.getString("PD") + "<br>" +
+//                            "<b>REG</b>: " + ueMember.getString("REG") + "<br>" +
+//                            "<b>PA</b>: " + ueMember.getString("PA") + "<br>" +
+//                            "<b>TI</b>: " + ueMember.getString("TI") + "<br>" +
+//                            "<b>AB</b>: " + ueMember.getString("AB") + "<br>" +
+//                            "<b>IMG</b>: " + ueMember.getString("IMG") + "<br>" +
+//                            "<b>CL</b>: " + ueMember.getString("CL") +
+//                    "</html>"
+//            );
+//        });
+        
+        // Java 7
+        jTable1.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                int viewRow = jTable1.getSelectedRow();
+                final int modelRow = jTable1.convertRowIndexToModel(viewRow);
+    //System.out.println("modelRow: " + modelRow);
+    //System.out.println("myModel: " + myModel.getValueAt(modelRow, 1));
+    //System.out.println("pbFam: " + myJOb.getJSONArray("Families").getJSONObject(modelRow).getString("ProjectName"));
                 JSONObject pbFam = 
-                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
-                pbFam.put("ProjectName", newData);
+                        myJOb.getJSONArray("Families").getJSONObject(modelRow),
+                        ueMember = pbFam.getJSONObject("UpdateMember");
+                showInfo(
+                        "<html>" +
+                        "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
+                        "<b>Basic Publication</b>: " + pbFam.getString("PatentNumber") +  "<br>" +
+                        "<b>Number of Family Members</b>: " + pbFam.getInt("mCount") +  "<br>" +
+                        "<b>Probable Assignee</b>: " + pbFam.getString("ProbableAssignee") + "<br>" +
+                        "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
+                        "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
+                        "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
+                        "<hr><p/>" + 
+                                "<b>PN</b>: <span style=\"color:red\">" + pbFam.getString("uePatentNumber") + "</span><br>" +
+                                "<b>PD</b>: " + pbFam.getString("PD") + "<br>" +
+                                "<b>REG</b>: " + ueMember.getString("REG") + "<br>" +
+                                "<b>PA</b>: " + ueMember.getString("PA") + "<br>" +
+                                "<b>TI</b>: " + ueMember.getString("TI") + "<br>" +
+                                "<b>AB</b>: " + ueMember.getString("AB") + "<br>" +
+                                "<b>IMG</b>: " + ueMember.getString("IMG") + "<br>" +
+                                "<b>CL</b>: " + ueMember.getString("CL") +
+                        "</html>"
+                );
+            }
+        });
+                
+        // update data if user edited project name
+        //Java 8
+//        jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
+//            int modelRow = e.getFirstRow();
+//            int column = e.getColumn();
+//            TableModel model = (TableModel)e.getSource();
+//            String columnName = model.getColumnName(column);
+//            Object newData = model.getValueAt(modelRow, column);
+//            if (columnName.equals("Project")) {
+////                int modelRow = jTable1.convertRowIndexToModel(modelRow);
+////System.out.println("modelRow_ed: " + modelRow);
+//                JSONObject pbFam = 
+//                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
+//                pbFam.put("ProjectName", newData);
+//            }
+//        });
+        
+        // Java 7
+        jTable1.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                int modelRow = e.getFirstRow();
+                int column = e.getColumn();
+                TableModel model = (TableModel)e.getSource();
+                String columnName = model.getColumnName(column);
+                Object newData = model.getValueAt(modelRow, column);
+                if (columnName.equals("Project")) {
+    //                int modelRow = jTable1.convertRowIndexToModel(modelRow);
+    //System.out.println("modelRow_ed: " + modelRow);
+                    JSONObject pbFam = 
+                            myJOb.getJSONArray("Families").getJSONObject(modelRow);
+                    pbFam.put("ProjectName", newData);
+                }
             }
         });
     }
@@ -524,14 +583,24 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
     }
     
     private void treeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_treeMenuItemActionPerformed
-        PatentTreeNode rootNode = getTreeNode();
+        final PatentTreeNode rootNode = getTreeNode();
         if (rootNode==null) {
             JOptionPane.showMessageDialog(rootPane, "No rows selected.");
         } else {
-            java.awt.EventQueue.invokeLater(() -> {
-                new TreeBranchEditor_2(rootNode, 
-                        PatbaseRestPlugin.coreAccess.getController())
-                        .setVisible(true);
+            // Java 8
+//            java.awt.EventQueue.invokeLater(() -> {
+//                new TreeBranchEditor_2(rootNode, 
+//                        PatbaseRestPlugin.coreAccess.getController())
+//                        .setVisible(true);
+//            });
+            // Java 7
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    new TreeBranchEditor_2(rootNode, 
+                            PatbaseRestPlugin.coreAccess.getController())
+                            .setVisible(true);
+                }
             });
         }
     }//GEN-LAST:event_treeMenuItemActionPerformed

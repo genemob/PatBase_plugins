@@ -262,27 +262,58 @@ public class PatbaseRestPlugin implements PatmobPlugin {
             
             stopAlerts = false;
             
-            java.awt.EventQueue.invokeLater(() -> {
-                PatbaseAlertTableFrame table = new PatbaseAlertTableFrame(allFamilies, PatbaseRestPlugin.this);
-                table.setVisible(true);
-                
-                AlertUpdater alertUpdater = new AlertUpdater(table);
-                new Thread(alertUpdater).start();
-            });
+            // Java 8
+//            java.awt.EventQueue.invokeLater(() -> {
+//                PatbaseAlertTableFrame table = new PatbaseAlertTableFrame(allFamilies, PatbaseRestPlugin.this);
+//                table.setVisible(true);
+//                
+//                AlertUpdater alertUpdater = new AlertUpdater(table);
+//                new Thread(alertUpdater).start();
+//            });
             
+            // Java 7
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    PatbaseAlertTableFrame table = new PatbaseAlertTableFrame(
+                            allFamilies, PatbaseRestPlugin.this);
+                    table.setVisible(true);
+
+                    AlertUpdater alertUpdater = new AlertUpdater(table);
+                    new Thread(alertUpdater).start();
+                }
+            });
         }
     }
     
-    public void runQuery(String cmd, String fromRec, String toRec, String sort) {
+    public void runQuery(final String cmd, final String fromRec, 
+            final String toRec, final String sort) {
 //            PatBaseQueryResultFormat format) {
-        java.awt.EventQueue.invokeLater(() -> {
-            JSONObject qResult = PatbaseRestApi.query(
-                    cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, sort, 
-                    "Single query");
-            qResult.put("ResultType", PatbaseRestApi.SEARCHRESULTS);
-            new PatbaseTableFrame(qResult, this).setVisible(true);
-            frame.appendQueryLogText(qResult.getString("Results")
-                    + " results for [" + cmd + "]");
+        
+        // Java 8
+//        java.awt.EventQueue.invokeLater(() -> {
+//            JSONObject qResult = PatbaseRestApi.query(
+//                    cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, sort, 
+//                    "Single query");
+//            qResult.put("ResultType", PatbaseRestApi.SEARCHRESULTS);
+//            new PatbaseTableFrame(qResult, this).setVisible(true);
+//            frame.appendQueryLogText(qResult.getString("Results")
+//                    + " results for [" + cmd + "]");
+//        });
+        
+        // Java 7
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject qResult = PatbaseRestApi.query(
+                        cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, sort, 
+                        "Single query");
+                qResult.put("ResultType", PatbaseRestApi.SEARCHRESULTS);
+                new PatbaseTableFrame(qResult, 
+                        PatbaseRestPlugin.this).setVisible(true);
+                frame.appendQueryLogText(qResult.getString("Results")
+                        + " results for [" + cmd + "]");
+            }
         });
     }    
     
@@ -293,26 +324,54 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                 .getPatmobProperty("patbaseAlertQueriesFile"));
         frame.setVisible(true);
         
-        java.awt.EventQueue.invokeLater(() -> {
-            // supress invalid cookie warnings
-            try {
-                System.setErr(new PrintStream("patbase_cookies.txt"));
-            } catch (FileNotFoundException ex) {
-                System.out.println("supress warnings: " + ex);
-            }
-            frame.setLogText(PatbaseRestApi.initialize(
-                    coreAccess.getController().getPatmobProperty("patmobProxy"),
-                    "piotr.masiakowski@sanofi.com", "ip4638"));
-            if (PatbaseRestApi.isInitialized) {
-                JSONObject jOb = PatbaseRestApi.runMethod(
-                        PatbaseRestApi.GETWEEK, null);
-                if (jOb!=null) {
-                    patbaseWeek =  jOb.getString("Week");
-                    frame.setPbWeekField(patbaseWeek);
-                    frame.setUpdateCmdField(
-                            "UE=" + patbaseWeek + "US or " +
-                            "UE=" + patbaseWeek + "EP or " +
-                            "UE=" + patbaseWeek + "WO");
+        // Java 8
+//        java.awt.EventQueue.invokeLater(() -> {
+//            // supress invalid cookie warnings
+//            try {
+//                System.setErr(new PrintStream("patbase_cookies.txt"));
+//            } catch (FileNotFoundException ex) {
+//                System.out.println("supress warnings: " + ex);
+//            }
+//            frame.setLogText(PatbaseRestApi.initialize(
+//                    coreAccess.getController().getPatmobProperty("patmobProxy"),
+//                    "piotr.masiakowski@sanofi.com", "ip4638"));
+//            if (PatbaseRestApi.isInitialized) {
+//                JSONObject jOb = PatbaseRestApi.runMethod(
+//                        PatbaseRestApi.GETWEEK, null);
+//                if (jOb!=null) {
+//                    patbaseWeek =  jOb.getString("Week");
+//                    frame.setPbWeekField(patbaseWeek);
+//                    frame.setUpdateCmdField(
+//                            "UE=" + patbaseWeek + "US or " +
+//                            "UE=" + patbaseWeek + "EP or " +
+//                            "UE=" + patbaseWeek + "WO");
+//                }
+//            }
+//        });
+        
+        // Java 7
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    System.setErr(new PrintStream("patbase_cookies.txt"));
+                } catch (FileNotFoundException ex) {
+                    System.out.println("supress warnings: " + ex);
+                }
+                frame.setLogText(PatbaseRestApi.initialize(
+                        coreAccess.getController().getPatmobProperty("patmobProxy"),
+                        "piotr.masiakowski@sanofi.com", "ip4638"));
+                if (PatbaseRestApi.isInitialized) {
+                    JSONObject jOb = PatbaseRestApi.runMethod(
+                            PatbaseRestApi.GETWEEK, null);
+                    if (jOb!=null) {
+                        patbaseWeek =  jOb.getString("Week");
+                        frame.setPbWeekField(patbaseWeek);
+                        frame.setUpdateCmdField(
+                                "UE=" + patbaseWeek + "US or " +
+                                "UE=" + patbaseWeek + "EP or " +
+                                "UE=" + patbaseWeek + "WO");
+                    }
                 }
             }
         });

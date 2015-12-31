@@ -13,6 +13,7 @@ import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.text.DefaultCaret;
@@ -48,16 +49,34 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
                 .addListSelectionListener(new AlertSelectionListener());
         
         // update data if user edited project name
-        jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
-            int modelRow = e.getFirstRow();
-            int column = e.getColumn();
-            TableModel model = (TableModel)e.getSource();
-            String columnName = model.getColumnName(column);
-            Object newData = model.getValueAt(modelRow, column);
-            if (columnName.equals("Project")) {
-                JSONObject pbFam = 
-                        alertResults.getJSONArray("Families").getJSONObject(modelRow);
-                pbFam.put("ProjectName", newData);
+        // Java 8
+//        jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
+//            int modelRow = e.getFirstRow();
+//            int column = e.getColumn();
+//            TableModel model = (TableModel)e.getSource();
+//            String columnName = model.getColumnName(column);
+//            Object newData = model.getValueAt(modelRow, column);
+//            if (columnName.equals("Project")) {
+//                JSONObject pbFam = 
+//                        alertResults.getJSONArray("Families").getJSONObject(modelRow);
+//                pbFam.put("ProjectName", newData);
+//            }
+//        });
+        
+        // Java 7
+        jTable1.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                int modelRow = e.getFirstRow();
+                int column = e.getColumn();
+                TableModel model = (TableModel)e.getSource();
+                String columnName = model.getColumnName(column);
+                Object newData = model.getValueAt(modelRow, column);
+                if (columnName.equals("Project")) {
+                    JSONObject pbFam = 
+                            alertResults.getJSONArray("Families").getJSONObject(modelRow);
+                    pbFam.put("ProjectName", newData);
+                }
             }
         });
     }
@@ -600,14 +619,25 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
     }
         
     private void treeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_treeMenuItemActionPerformed
-        PatentTreeNode rootNode = getTreeNode();
+        final PatentTreeNode rootNode = getTreeNode();
         if (rootNode==null) {
             JOptionPane.showMessageDialog(rootPane, "No rows selected.");
         } else {
-            java.awt.EventQueue.invokeLater(() -> {
-                new TreeBranchEditor_2(rootNode, 
-                        PatbaseRestPlugin.coreAccess.getController())
-                        .setVisible(true);
+            // Java 8
+//            java.awt.EventQueue.invokeLater(() -> {
+//                new TreeBranchEditor_2(rootNode, 
+//                        PatbaseRestPlugin.coreAccess.getController())
+//                        .setVisible(true);
+//            });
+            
+            // Java 7
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    new TreeBranchEditor_2(rootNode, 
+                            PatbaseRestPlugin.coreAccess.getController())
+                            .setVisible(true);
+                }
             });
         }
     }//GEN-LAST:event_treeMenuItemActionPerformed
