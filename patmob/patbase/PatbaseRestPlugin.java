@@ -1,5 +1,6 @@
 package patmob.patbase;
 
+import patmob.patbase.table.PatbaseQueryTableFrame;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -280,7 +281,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                     cmd, PatbaseRestApi.SEARCHRESULTS, fromRec, toRec, sort, 
                     "Single query");
             qResult.put("ResultType", PatbaseRestApi.SEARCHRESULTS);
-            new PatbaseTableFrame(qResult, this).setVisible(true);
+            new PatbaseQueryTableFrame(qResult, this).setVisible(true);
             frame.appendQueryLogText(qResult.getString("Results")
                     + " results for [" + cmd + "]");
         });

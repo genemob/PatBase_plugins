@@ -1,19 +1,15 @@
-package patmob.patbase;
+package patmob.patbase.table;
 
 import java.awt.Desktop;
-import java.awt.Rectangle;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,13 +19,15 @@ import patmob.data.PatentCollectionList;
 import patmob.data.PatentCollectionMap;
 import patmob.data.PatentDocument;
 import patmob.data.PatentTreeNode;
+import patmob.patbase.PatbaseRestApi;
+import patmob.patbase.PatbaseRestPlugin;
 
-public class PatbaseTableFrame extends javax.swing.JFrame {
+public class PatbaseQueryTableFrame extends javax.swing.JFrame {
     TableModel myModel = null;
     JSONObject myJOb = null;
     PatbaseRestPlugin plugin;
 
-    public PatbaseTableFrame(JSONObject patbaseSearchResults, 
+    public PatbaseQueryTableFrame(JSONObject patbaseSearchResults, 
             PatbaseRestPlugin parent) {
         plugin = parent;
         myJOb = patbaseSearchResults;
@@ -42,38 +40,45 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         jTable1.getColumn("Select").setMaxWidth(45);
         jTable1.getColumn("Select").setResizable(false);
         
+        
         // display detail about the selected modelRow
         jTable1.getSelectionModel().addListSelectionListener(
                 // *** lambda expression ***
                 (ListSelectionEvent event) -> {
+                    
+                    try {
             int viewRow = jTable1.getSelectedRow();
             final int modelRow = jTable1.convertRowIndexToModel(viewRow);
 //System.out.println("modelRow: " + modelRow);
 //System.out.println("myModel: " + myModel.getValueAt(modelRow, 1));
 //System.out.println("pbFam: " + myJOb.getJSONArray("Families").getJSONObject(modelRow).getString("ProjectName"));
             JSONObject pbFam = 
-                    myJOb.getJSONArray("Families").getJSONObject(modelRow),
-                    ueMember = pbFam.getJSONObject("UpdateMember");
+                    myJOb.getJSONArray("Families").getJSONObject(modelRow);
+//                    ueMember = pbFam.getJSONObject("UpdateMember");
             showInfo(
                     "<html>" +
                     "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
                     "<b>Basic Publication</b>: " + pbFam.getString("PatentNumber") +  "<br>" +
-                    "<b>Number of Family Members</b>: " + pbFam.getInt("mCount") +  "<br>" +
+                    "<b>Number of Family Members</b>: " + pbFam.getInt("MemberCount") +  "<br>" +
                     "<b>Probable Assignee</b>: " + pbFam.getString("ProbableAssignee") + "<br>" +
                     "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
                     "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
                     "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
-                    "<hr><p/>" + 
-                            "<b>PN</b>: <span style=\"color:red\">" + pbFam.getString("uePatentNumber") + "</span><br>" +
-                            "<b>PD</b>: " + pbFam.getString("PD") + "<br>" +
-                            "<b>REG</b>: " + ueMember.getString("REG") + "<br>" +
-                            "<b>PA</b>: " + ueMember.getString("PA") + "<br>" +
-                            "<b>TI</b>: " + ueMember.getString("TI") + "<br>" +
-                            "<b>AB</b>: " + ueMember.getString("AB") + "<br>" +
-                            "<b>IMG</b>: " + ueMember.getString("IMG") + "<br>" +
-                            "<b>CL</b>: " + ueMember.getString("CL") +
+//                    "<hr><p/>" + 
+//                            "<b>PN</b>: <span style=\"color:red\">" + pbFam.getString("uePatentNumber") + "</span><br>" +
+//                            "<b>PD</b>: " + pbFam.getString("PD") + "<br>" +
+//                            "<b>REG</b>: " + ueMember.getString("REG") + "<br>" +
+//                            "<b>PA</b>: " + ueMember.getString("PA") + "<br>" +
+//                            "<b>TI</b>: " + ueMember.getString("TI") + "<br>" +
+//                            "<b>AB</b>: " + ueMember.getString("AB") + "<br>" +
+//                            "<b>IMG</b>: " + ueMember.getString("IMG") + "<br>" +
+//                            "<b>CL</b>: " + ueMember.getString("CL") +
                     "</html>"
             );
+                    } catch (Exception x) {System.out.println(
+                            "ListSelectionListener: " + x);}
+            
+            
         });
         
         // update data if user edited project name
@@ -350,7 +355,7 @@ public class PatbaseTableFrame extends javax.swing.JFrame {
         final int modelRow = jTable1.convertRowIndexToModel(viewRow);
         JSONObject pbFam = 
                 myJOb.getJSONArray("Families").getJSONObject(modelRow);
-        String pn = pbFam.getString("uePatentNumber");
+        String pn = pbFam.getString("PatentNumber");
         if (pn.contains(" ")) {
             pn = pn.substring(0, pn.indexOf(" "));
         } else {
