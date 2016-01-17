@@ -7,7 +7,9 @@ import java.net.URL;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.text.DefaultCaret;
@@ -39,43 +41,86 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
         
         
         // display detail about the selected modelRow
-        jTable1.getSelectionModel().addListSelectionListener(
-                // *** lambda expression ***
-                (ListSelectionEvent event) -> {
-                    
+        // Java 8
+//        jTable1.getSelectionModel().addListSelectionListener(
+//                // *** lambda expression ***
+//                (ListSelectionEvent event) -> {
+//                    try {
+//                        int viewRow = jTable1.getSelectedRow();
+//                        final int modelRow = jTable1.convertRowIndexToModel(viewRow);
+//                        JSONObject pbFam = 
+//                                myJOb.getJSONArray("Families").getJSONObject(modelRow);
+//                        showInfo(
+//                                "<html>" +
+//                                "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
+//                                "<b>Basic Publication</b>: " + pbFam.getString("PatentNumber") +  "<br>" +
+//                                "<b>Number of Family Members</b>: " + pbFam.getInt("MemberCount") +  "<br>" +
+//                                "<b>Probable Assignee</b>: " + pbFam.getString("ProbableAssignee") + "<br>" +
+//                                "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
+//                                "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
+//                                "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
+//                                "</html>"
+//                        );
+//                    } catch (Exception x) {
+//                        System.out.println("ListSelectionListener: " + x);
+//                    }
+//        });
+        // Java 7
+        jTable1.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
                     try {
-            int viewRow = jTable1.getSelectedRow();
-            final int modelRow = jTable1.convertRowIndexToModel(viewRow);
-            JSONObject pbFam = 
-                    myJOb.getJSONArray("Families").getJSONObject(modelRow);
-            showInfo(
-                    "<html>" +
-                    "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
-                    "<b>Basic Publication</b>: " + pbFam.getString("PatentNumber") +  "<br>" +
-                    "<b>Number of Family Members</b>: " + pbFam.getInt("MemberCount") +  "<br>" +
-                    "<b>Probable Assignee</b>: " + pbFam.getString("ProbableAssignee") + "<br>" +
-                    "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
-                    "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
-                    "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
-                    "</html>"
-            );
-                    } catch (Exception x) {System.out.println(
-                            "ListSelectionListener: " + x);}
-            
-            
+                        int viewRow = jTable1.getSelectedRow();
+                        final int modelRow = jTable1.convertRowIndexToModel(viewRow);
+                        JSONObject pbFam = 
+                                myJOb.getJSONArray("Families").getJSONObject(modelRow);
+                        showInfo(
+                                "<html>" +
+                                "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
+                                "<b>Basic Publication</b>: " + pbFam.getString("PatentNumber") +  "<br>" +
+                                "<b>Number of Family Members</b>: " + pbFam.getInt("MemberCount") +  "<br>" +
+                                "<b>Probable Assignee</b>: " + pbFam.getString("ProbableAssignee") + "<br>" +
+                                "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
+                                "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
+                                "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
+                                "</html>"
+                        );
+                    } catch (Exception x) {
+                        System.out.println("ListSelectionListener: " + x);
+                    }
+            }
         });
         
         // update data if user edited project name
-        jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
-            int modelRow = e.getFirstRow();
-            int column = e.getColumn();
-            TableModel model = (TableModel)e.getSource();
-            String columnName = model.getColumnName(column);
-            Object newData = model.getValueAt(modelRow, column);
-            if (columnName.equals("Project")) {
-                JSONObject pbFam = 
-                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
-                pbFam.put("ProjectName", newData);
+        // Java 8
+//        jTable1.getModel().addTableModelListener((TableModelEvent e) -> {
+//            int modelRow = e.getFirstRow();
+//            int column = e.getColumn();
+//            TableModel model = (TableModel)e.getSource();
+//            String columnName = model.getColumnName(column);
+//            Object newData = model.getValueAt(modelRow, column);
+//            if (columnName.equals("Project")) {
+//                JSONObject pbFam = 
+//                        myJOb.getJSONArray("Families").getJSONObject(modelRow);
+//                pbFam.put("ProjectName", newData);
+//            }
+//        });
+        
+        // Java 7
+        jTable1.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                int modelRow = e.getFirstRow();
+                int column = e.getColumn();
+                TableModel model = (TableModel)e.getSource();
+                String columnName = model.getColumnName(column);
+                Object newData = model.getValueAt(modelRow, column);
+                if (columnName.equals("Project")) {
+                    JSONObject pbFam = 
+                            myJOb.getJSONArray("Families").getJSONObject(modelRow);
+                    pbFam.put("ProjectName", newData);
+                }
             }
         });
     }
@@ -509,14 +554,25 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
     }
     
     private void treeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_treeMenuItemActionPerformed
-        PatentTreeNode rootNode = getTreeNode();
+        final PatentTreeNode rootNode = getTreeNode();
         if (rootNode==null) {
             JOptionPane.showMessageDialog(rootPane, "No rows selected.");
         } else {
-            java.awt.EventQueue.invokeLater(() -> {
-                new TreeBranchEditor_2(rootNode, 
-                        PatbaseRestPlugin.coreAccess.getController())
-                        .setVisible(true);
+            // Java 8
+//            java.awt.EventQueue.invokeLater(() -> {
+//                new TreeBranchEditor_2(rootNode, 
+//                        PatbaseRestPlugin.coreAccess.getController())
+//                        .setVisible(true);
+//            });
+            
+            // Java 7
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    new TreeBranchEditor_2(rootNode, 
+                            PatbaseRestPlugin.coreAccess.getController())
+                            .setVisible(true);
+                }
             });
         }
     }//GEN-LAST:event_treeMenuItemActionPerformed
