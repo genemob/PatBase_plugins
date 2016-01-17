@@ -31,9 +31,6 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
             PatbaseRestPlugin parent) {
         plugin = parent;
         myJOb = patbaseSearchResults;
-//        
-//        System.out.println(myJOb.toString(2));
-//        
         myModel = getCustomModel(myJOb);
         initComponents();
         jTable1.setAutoCreateRowSorter(true);
@@ -49,12 +46,8 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
                     try {
             int viewRow = jTable1.getSelectedRow();
             final int modelRow = jTable1.convertRowIndexToModel(viewRow);
-//System.out.println("modelRow: " + modelRow);
-//System.out.println("myModel: " + myModel.getValueAt(modelRow, 1));
-//System.out.println("pbFam: " + myJOb.getJSONArray("Families").getJSONObject(modelRow).getString("ProjectName"));
             JSONObject pbFam = 
                     myJOb.getJSONArray("Families").getJSONObject(modelRow);
-//                    ueMember = pbFam.getJSONObject("UpdateMember");
             showInfo(
                     "<html>" +
                     "<b>PatBase Family</b>: " + pbFam.getString("Family") + "<br>" +
@@ -64,15 +57,6 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
                     "<b>First Inventor</b>: " + pbFam.getString("FirstInventor") + "<br>" +
                     "<b>Title</b>: " + enTitle(pbFam) + "<br>" +
                     "<b>Abstract</b>: " + enAbstract(pbFam) + "<br>" +
-//                    "<hr><p/>" + 
-//                            "<b>PN</b>: <span style=\"color:red\">" + pbFam.getString("uePatentNumber") + "</span><br>" +
-//                            "<b>PD</b>: " + pbFam.getString("PD") + "<br>" +
-//                            "<b>REG</b>: " + ueMember.getString("REG") + "<br>" +
-//                            "<b>PA</b>: " + ueMember.getString("PA") + "<br>" +
-//                            "<b>TI</b>: " + ueMember.getString("TI") + "<br>" +
-//                            "<b>AB</b>: " + ueMember.getString("AB") + "<br>" +
-//                            "<b>IMG</b>: " + ueMember.getString("IMG") + "<br>" +
-//                            "<b>CL</b>: " + ueMember.getString("CL") +
                     "</html>"
             );
                     } catch (Exception x) {System.out.println(
@@ -89,8 +73,6 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
             String columnName = model.getColumnName(column);
             Object newData = model.getValueAt(modelRow, column);
             if (columnName.equals("Project")) {
-//                int modelRow = jTable1.convertRowIndexToModel(modelRow);
-//System.out.println("modelRow_ed: " + modelRow);
                 JSONObject pbFam = 
                         myJOb.getJSONArray("Families").getJSONObject(modelRow);
                 pbFam.put("ProjectName", newData);
@@ -106,7 +88,7 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
 //        return txt;
 //    }
             
-    public void showInfo(String s) {
+    public final void showInfo(String s) {
         // http://stackoverflow.com/questions/5350722/
         //disabling-scrolling-to-end-of-text-in-jeditorpane
         final DefaultCaret caret = (DefaultCaret) jEditorPane1.getCaret();
@@ -184,7 +166,6 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
                 o.getString("PD"),
                 o.getString("Title"),
                 o.getString("ProbableAssignee")
-//                o.getInt("mCount")
             };
         }
         Object[] colNames = new Object[]{
@@ -194,7 +175,6 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
             "Date",
             "Title",
             "ProbableAssignee"
-//            "Count"
         };   
         return new DefaultTableModel(data, colNames){
             //override getColumnClass to render boolean as checkbox
