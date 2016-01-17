@@ -1,5 +1,6 @@
 package patmob.patbase;
 
+import patmob.patbase.table.PatbaseQueryTableFrame;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
