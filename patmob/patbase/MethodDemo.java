@@ -13,6 +13,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 import static patmob.patbase.PatbaseRestClient.getResponseData;
 import static patmob.patbase.PatbaseRestClient.httpclient;
+import patmob.util.CredentialsDialog;
 
 /**
  *
@@ -23,12 +24,17 @@ public class MethodDemo extends javax.swing.JFrame {
 
     /**
      * Creates new form MethodDemo
+     * @param patmobProxy
      */
     public MethodDemo(String patmobProxy) {
         initComponents();
         jTable1.getColumn("Parameter").setMaxWidth(100);
+//        jTextArea1.setText(PatbaseRestClient.initialize(patmobProxy, 
+//                "piotr.masiakowski@sanofi.com", "ip4638"));
+        
+        String[] creds = CredentialsDialog.getCredentials();
         jTextArea1.setText(PatbaseRestClient.initialize(patmobProxy, 
-                "piotr.masiakowski@sanofi.com", "ip4638"));
+                creds[0], creds[1]));
     }
 
     /**

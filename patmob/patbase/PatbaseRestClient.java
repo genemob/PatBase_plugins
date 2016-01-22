@@ -194,7 +194,8 @@ X-CDN: Incapsula
         
         System.out.println(
                 "patbaseConnStatus: " + initialize(
-                        null, "piotr.masiakowski@sanofi.com", "ip4638"));
+//                        null, "piotr.masiakowski@sanofi.com", "ip4638"));
+                        null, "patbase_api@sanofi.com", "4uhHab4Hz"));
         
         String query = "UE=1522 and tac=(FGF21)";
         System.out.println(PatbaseRestApi.query(

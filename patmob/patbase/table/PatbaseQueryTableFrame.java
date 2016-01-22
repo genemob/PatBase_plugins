@@ -404,7 +404,8 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
                                 "\t" + pbFam.getString("ProbableAssignee") +
                                 "\t" + pbFam.getString("FirstInventor") +
                                 "\t" + enTitle(pbFam) +
-                                "\t" + enAbstract(pbFam) + "\n"
+//                                "\t" + enAbstract(pbFam) + "\n"
+                                "\t" + stripReturns(enAbstract(pbFam)) + "\n"
                         );
                         bw.flush();
                     }
@@ -414,6 +415,13 @@ public class PatbaseQueryTableFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_writeMenuItemActionPerformed
 
+    private String stripReturns(String s) {
+        if (s.contains("\n")) {
+            s = s.replaceAll("\n", " ");
+        }
+        return s;
+    }
+    
     private void selectMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectMenuItemActionPerformed
         setCheckboxes(true);
     }//GEN-LAST:event_selectMenuItemActionPerformed
