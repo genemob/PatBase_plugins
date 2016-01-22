@@ -361,7 +361,8 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                 }
                 frame.setLogText(PatbaseRestApi.initialize(
                         coreAccess.getController().getPatmobProperty("patmobProxy"),
-                        "piotr.masiakowski@sanofi.com", "ip4638"));
+//                        "piotr.masiakowski@sanofi.com", "ip4638"));
+                        "patbase_api@sanofi.com", "4uhHab4Hz"));
                 if (PatbaseRestApi.isInitialized) {
                     JSONObject jOb = PatbaseRestApi.runMethod(
                             PatbaseRestApi.GETWEEK, null);
