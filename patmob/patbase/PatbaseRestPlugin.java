@@ -22,6 +22,7 @@ import patmob.patbase.table.PatbaseAlertTableFrame;
  */
 public class PatbaseRestPlugin implements PatmobPlugin {
     PatbaseQueryFrame frame;
+    // default current, but can be defined by user
     String patbaseWeek = "";
     boolean stopAlerts = false;
     //key = family name; value = projects which have this family
@@ -40,7 +41,8 @@ public class PatbaseRestPlugin implements PatmobPlugin {
         showGui();
     }
     
-    public void runAlerts(String queryFilePath, String updateCmd) {
+    public void runAlerts(String queryFilePath, String updateCmd, String queryWeek) {
+        patbaseWeek = queryWeek;
         coreAccess.getController().setPatmobProperty(
                 "patbaseAlertQueriesFile", queryFilePath);
         coreAccess.getController().savePatmobProperties();
@@ -104,6 +106,12 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                         String claimsTxt = equivalentData.getJSONArray("FullText")
                                 .getJSONObject(0).getString("Claims");
                         String imgData = "";
+                        StringBuilder invBuilder = new StringBuilder();
+                        JSONArray invArray = equivalentData.getJSONArray("Inventors");
+                        for (int i=0; i<invArray.length(); i++) {
+                            JSONObject inv = invArray.optJSONObject(i);
+                            invBuilder.append(inv.optString("INV") + "; ");
+                        }
                         
                         // * Get images from claims
                         int start = claimsTxt.indexOf("[FTIMG");
@@ -125,6 +133,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                         updateMember.put("AB", equivalentData.optString("Abstract"));
                         updateMember.put("IMG", imgData);
                         updateMember.put("CL", claimsTxt);
+                        updateMember.put("INV", invBuilder.substring(0, invBuilder.length()-2));
                         
                         if (uePN.startsWith("EP")) {
                             String allPubs = getPubsFromRegister(p[0]);
@@ -309,12 +318,15 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                 JSONObject jOb = PatbaseRestApi.runMethod(
                         PatbaseRestApi.GETWEEK, null);
                 if (jOb!=null) {
-                    patbaseWeek =  jOb.getString("Week");
-                    frame.setPbWeekField(patbaseWeek);
-                    frame.setUpdateCmdField(
-                            "UE=" + patbaseWeek + "US or " +
-                            "UE=" + patbaseWeek + "EP or " +
-                            "UE=" + patbaseWeek + "WO");
+//                    patbaseWeek =  jOb.getString("Week");
+//                    frame.setPbWeekField(patbaseWeek);
+//                    frame.setUpdateCmdField(
+//                            "UE=" + patbaseWeek + "US or " +
+//                            "UE=" + patbaseWeek + "EP or " +
+//                            "UE=" + patbaseWeek + "WO");
+                    String currentWeek = jOb.getString("Week");
+                    frame.setPbWeekField(currentWeek);
+                    frame.setUpdateCmdField(currentWeek);
                 }
             }
         });

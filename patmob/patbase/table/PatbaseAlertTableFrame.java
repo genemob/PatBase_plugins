@@ -100,6 +100,7 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
                     "<b>PA</b>: " + ueMember.optString("PA") + "<br>" + 
                     "<b>TI</b>: " + ueMember.optString("TI") + "<br>" + 
                     "<b>AB</b>: " + ueMember.optString("AB") + "<br>" + 
+                    "<b>INV</b>: " + ueMember.optString("INV") + "<br>" + 
                     "<b>IMG</b>: " + ueMember.optString("IMG") + "<br>" + 
                     "<b>CL</b>: " + ueMember.optString("CL") + 
                     "</html>";
@@ -451,6 +452,7 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
                             "<th style=\"width:200px\">Title</th>" +
                             "<th style=\"width:150px\">Assignee</th>" +
                             "<th colspan=\"2\">Abstract</th>" +
+                            "<th style=\"width:150px\">Inventors</th>" +
                             "</tr>");
                     bw.flush();
 
@@ -530,6 +532,7 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
                 "<td style=\"width:200px\">" + parseMemberString(ueMember.optString("IMG"))
                         .replace(">", " width=200px>") + "</td>" +              // img tag in the table displays full-size image
                 "<td style=\"width:650px\">" + parseMemberString(ueMember.optString("AB")) + "</td>" +  
+                "<td>" + ueMember.optString("INV") + "</td>" +
                 "</tr>";
         return row;
     }

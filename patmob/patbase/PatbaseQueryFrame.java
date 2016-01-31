@@ -5,6 +5,8 @@
 package patmob.patbase;
 
 import javax.swing.JFileChooser;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
@@ -25,6 +27,21 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
 //        defaultFormat = new PatBaseQueryResultFormat();
 //        afterDateTextField.setText(defaultFormat.afterDate());
 //        selectCountriesTextField.setText(defaultFormat.selectCountries());
+        userWeekTextField.getDocument().addDocumentListener(
+                new DocumentListener() {
+                    @Override
+                    public void insertUpdate(DocumentEvent e) {
+                        setUpdateCmdField(userWeekTextField.getText());
+                    }
+                    @Override
+                    public void removeUpdate(DocumentEvent e) {
+                        setUpdateCmdField(userWeekTextField.getText());
+                    }
+                    @Override
+                    public void changedUpdate(DocumentEvent e) {
+                    }
+                }
+        );
     }
     
     // ALERT LOG TextArea
@@ -51,8 +68,10 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     }
 
     // Update Cmd TextField
-    public void setUpdateCmdField(String txt) {
-        updateCmdField.setText(txt);
+    public void setUpdateCmdField(String week) {
+        updateCmdField.setText("UE=" + week + "US or " +
+                               "UE=" + week + "EP or " +
+                               "UE=" + week + "WO");
     }
     public String getUpdateCmdField() {
         return updateCmdField.getText();
@@ -95,6 +114,8 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
         stopAlertsButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         alertLogArea = new javax.swing.JTextArea();
+        jLabel6 = new javax.swing.JLabel();
+        userWeekTextField = new javax.swing.JTextField();
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         cmdTextArea = new javax.swing.JTextArea();
@@ -117,6 +138,8 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
         pbWeekField.setEditable(false);
 
         jLabel4.setText("Update Command");
+
+        updateCmdField.setEditable(false);
 
         queryFileButton.setText("Query File");
         queryFileButton.addActionListener(new java.awt.event.ActionListener() {
@@ -145,6 +168,8 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
         alertLogArea.setWrapStyleWord(true);
         jScrollPane2.setViewportView(alertLogArea);
 
+        jLabel6.setText("Use:");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -156,7 +181,11 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(pbWeekField))
+                        .addComponent(pbWeekField, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(userWeekTextField))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -179,7 +208,9 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
-                    .addComponent(pbWeekField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(pbWeekField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel6)
+                    .addComponent(userWeekTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
@@ -340,7 +371,7 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_queryFileButtonActionPerformed
 
     private void runAlertsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runAlertsButtonActionPerformed
-        parent.runAlerts(getQueryFileField(), getUpdateCmdField());
+        parent.runAlerts(getQueryFileField(), getUpdateCmdField(), userWeekTextField.getText());
     }//GEN-LAST:event_runAlertsButtonActionPerformed
 
     /*
@@ -391,6 +422,7 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
@@ -406,5 +438,6 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     private javax.swing.JButton stopAlertsButton;
     private javax.swing.JTextField toRecField;
     private javax.swing.JTextField updateCmdField;
+    private javax.swing.JTextField userWeekTextField;
     // End of variables declaration//GEN-END:variables
 }
