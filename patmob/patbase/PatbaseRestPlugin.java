@@ -376,12 +376,17 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                     JSONObject jOb = PatbaseRestApi.runMethod(
                             PatbaseRestApi.GETWEEK, null);
                     if (jOb!=null) {
-                        patbaseWeek =  jOb.getString("Week");
-                        frame.setPbWeekField(patbaseWeek);
-                        frame.setUpdateCmdField(
-                                "UE=" + patbaseWeek + "US or " +
-                                "UE=" + patbaseWeek + "EP or " +
-                                "UE=" + patbaseWeek + "WO");
+//                        patbaseWeek =  jOb.getString("Week");
+//                        frame.setPbWeekField(patbaseWeek);
+//                        frame.setUpdateCmdField(
+//                                "UE=" + patbaseWeek + "US or " +
+//                                "UE=" + patbaseWeek + "EP or " +
+//                                "UE=" + patbaseWeek + "WO");
+                        
+                        String currentWeek = jOb.getString("Week");
+                        frame.setPbWeekField(currentWeek);
+                        frame.setUpdateCmdField(currentWeek);
+                        
                     }
                 }
             }
