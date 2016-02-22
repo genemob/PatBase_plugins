@@ -62,6 +62,7 @@ public class PatbaseQueryFrame extends javax.swing.JFrame {
     // Current PatBase Week TextField
     public void setPbWeekField(String txt) {
         pbWeekField.setText(txt);
+        userWeekTextField.setText(txt);
     }
     public String getPbWeekField() {
         return pbWeekField.getText();

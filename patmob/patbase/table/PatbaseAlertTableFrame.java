@@ -1,5 +1,6 @@
 package patmob.patbase.table;
 
+import java.awt.Color;
 import patmob.patbase.*;
 import java.awt.Desktop;
 import java.io.BufferedWriter;
@@ -17,6 +18,9 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.text.DefaultCaret;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Document;
+import javax.swing.text.Highlighter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,6 +40,9 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
     TableModel tableModel = null;
     JSONObject alertResults = null;
     PatmobPlugin plugin;
+    
+    Highlighter hilit;
+    Highlighter.HighlightPainter painter;
 
     public PatbaseAlertTableFrame(JSONObject result, PatmobPlugin p) {
         plugin = p;
@@ -81,6 +88,10 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
                 }
             }
         });
+        
+        hilit = new DefaultHighlighter();
+        painter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
+        jEditorPane1.setHighlighter(hilit);
     }
     
     private class AlertSelectionListener implements ListSelectionListener {
@@ -124,6 +135,7 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
                     "<b>CL</b>: " + ueMember.optString("CL") + 
                     "</html>";
             jEditorPane1.setText(info);
+            findFieldActionPerformed(null);
         }
         
         /**
@@ -209,6 +221,9 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         jEditorPane1 = new javax.swing.JEditorPane();
         patOfficeButton = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        findField = new javax.swing.JTextField();
+        foundLabel = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         saveMenuItem = new javax.swing.JMenuItem();
@@ -222,7 +237,7 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("PatBase Alert Table");
 
-        jSplitPane1.setDividerLocation(100);
+        jSplitPane1.setDividerLocation(150);
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
         jTable1.setModel(tableModel);
@@ -248,13 +263,33 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
             }
         });
 
+        jLabel1.setText("Find:");
+
+        findField.setToolTipText("");
+        findField.setPreferredSize(new java.awt.Dimension(100, 20));
+        findField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                findFieldActionPerformed(evt);
+            }
+        });
+
+        foundLabel.setText("0");
+        foundLabel.setOpaque(true);
+        foundLabel.setPreferredSize(new java.awt.Dimension(20, 14));
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 598, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(findField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(pbExpressButton)
                 .addGap(18, 18, 18)
                 .addComponent(patOfficeButton)
@@ -263,11 +298,14 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 194, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(pbExpressButton)
-                    .addComponent(patOfficeButton)))
+                    .addComponent(patOfficeButton)
+                    .addComponent(jLabel1)
+                    .addComponent(findField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         jSplitPane1.setRightComponent(jPanel1);
@@ -327,11 +365,11 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
+            .addComponent(jSplitPane1)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
         );
 
         pack();
@@ -669,9 +707,47 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
             }
     }//GEN-LAST:event_saveMenuItemActionPerformed
 
+    /**
+     * Hilite the string typed in the field in the document. Not case-sensitive.
+     * @param evt 
+     */
+    private void findFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_findFieldActionPerformed
+
+        hilit.removeAllHighlights();
+        String searchString = findField.getText().toLowerCase();
+        if (searchString.length()<1) return;
+        
+        String content = "";
+        Document doc = jEditorPane1.getDocument();
+        int len = doc.getLength();
+        try {
+            content = doc.getText(0, len).toLowerCase();
+        } catch (Exception x){
+            System.out.println(x);
+        }
+        int end = 0, foundCount = 0;
+        
+        while (end<content.length()) {
+            int index = content.indexOf(searchString, end);
+            if (index>=0) {
+                try {
+                    end = index + searchString.length();
+                    hilit.addHighlight(index, end, painter);
+                    foundCount++;
+                } catch (Exception x) {
+                    System.out.println("hilit: " + x);
+                }
+            } else break;
+        }
+        foundLabel.setText(Integer.toString(foundCount));
+    }//GEN-LAST:event_findFieldActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem deselectMenuItem;
+    private javax.swing.JTextField findField;
+    private javax.swing.JLabel foundLabel;
     private javax.swing.JEditorPane jEditorPane1;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
