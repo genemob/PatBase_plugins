@@ -200,17 +200,18 @@ public class PatbaseRestPlugin implements PatmobPlugin {
         
         @Override
         public void run() {
-            for (String allQuerie : allQueries) {
+            for (String myQuery : allQueries) {
                 if (stopAlerts) {
                     break;
                 }
-                String[] myJob = allQuerie.split("\t");
+                String[] myJob = myQuery.split("\t");
                 String projectName = myJob[0],
                         fullQuery = "(" + myJob[1] + ") and (" + updateCmd +")";
                 frame.appendLogText("\nSubmitting " + projectName + "... ");
                 JSONObject projectResults = PatbaseRestApi.query(
                         fullQuery, PatbaseRestApi.SEARCHRESULTSBIB, 
-                        "1", "100", "2", projectName);
+//                        "1", "100", "2", projectName);
+                        "1", null, "2", projectName);       //get ALL results
                 if (projectResults!=null) {
                     // Add families from 'projectResults' to 'allFamilies'
                     // if not there already - use 'familyProjectMap' to map

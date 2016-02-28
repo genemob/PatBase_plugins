@@ -11,12 +11,14 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Document;
@@ -43,13 +45,14 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
     
     Highlighter hilit;
     Highlighter.HighlightPainter painter;
+    TableRowSorter<TableModel> sorter;
 
     public PatbaseAlertTableFrame(JSONObject result, PatmobPlugin p) {
         plugin = p;
         alertResults = result;
         tableModel = getCustomModel(alertResults);
         initComponents();
-        jTable1.setAutoCreateRowSorter(true);
+//        jTable1.setAutoCreateRowSorter(true);
         jTable1.getColumn("Select").setMaxWidth(45);
         jTable1.getColumn("Select").setResizable(false);
         
@@ -73,7 +76,8 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
 //        });
         
         // Java 7
-        jTable1.getModel().addTableModelListener(new TableModelListener() {
+//        jTable1.getModel().addTableModelListener(new TableModelListener() {
+        tableModel.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
                 int modelRow = e.getFirstRow();
@@ -89,9 +93,14 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
             }
         });
         
+        // find in biblio/claims
         hilit = new DefaultHighlighter();
         painter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
         jEditorPane1.setHighlighter(hilit);
+        
+        //filter in table
+        sorter = new TableRowSorter<>(tableModel);
+        jTable1.setRowSorter(sorter);
     }
     
     private class AlertSelectionListener implements ListSelectionListener {
@@ -99,11 +108,15 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         public void valueChanged(ListSelectionEvent e) {
             if (!e.getValueIsAdjusting()) {
                 int viewRow = jTable1.getSelectedRow();
-                int modelRow = jTable1.convertRowIndexToModel(viewRow);
-                JSONObject pbFam = alertResults
-                        .getJSONArray("Families").getJSONObject(modelRow);
-                JSONObject ueMember = pbFam.getJSONObject("UpdateMember");
-                showInfo(pbFam, ueMember);
+                if (viewRow>=0) {
+                    int modelRow = jTable1.convertRowIndexToModel(viewRow);
+                    JSONObject pbFam = alertResults
+                            .getJSONArray("Families").getJSONObject(modelRow);
+                    JSONObject ueMember = pbFam.getJSONObject("UpdateMember");
+                    showInfo(pbFam, ueMember);                    
+                } else {        // selected row hidden by filter?
+                    jEditorPane1.setText("");                   
+                }
             }
         }
 
@@ -224,6 +237,9 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         findField = new javax.swing.JTextField();
         foundLabel = new javax.swing.JLabel();
+        filterLabel = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        filterField = new javax.swing.JTextField();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         saveMenuItem = new javax.swing.JMenuItem();
@@ -263,10 +279,10 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
             }
         });
 
-        jLabel1.setText("Find:");
+        jLabel1.setText("FIND");
 
         findField.setToolTipText("");
-        findField.setPreferredSize(new java.awt.Dimension(100, 20));
+        findField.setPreferredSize(new java.awt.Dimension(60, 20));
         findField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 findFieldActionPerformed(evt);
@@ -274,26 +290,46 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         });
 
         foundLabel.setText("0");
+        foundLabel.setToolTipText("");
         foundLabel.setOpaque(true);
         foundLabel.setPreferredSize(new java.awt.Dimension(20, 14));
+
+        filterLabel.setBackground(new java.awt.Color(255, 255, 255));
+        filterLabel.setText("0");
+        filterLabel.setToolTipText("");
+        filterLabel.setPreferredSize(new java.awt.Dimension(60, 14));
+
+        jLabel2.setText("FILTER");
+
+        filterField.setPreferredSize(new java.awt.Dimension(60, 20));
+        filterField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                filterFieldActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 598, Short.MAX_VALUE)
+            .addComponent(jScrollPane2)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(4, 4, 4)
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(filterField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(filterLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
+                .addComponent(pbExpressButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(patOfficeButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 67, Short.MAX_VALUE)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(findField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(pbExpressButton)
-                .addGap(18, 18, 18)
-                .addComponent(patOfficeButton)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -305,7 +341,10 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
                     .addComponent(patOfficeButton)
                     .addComponent(jLabel1)
                     .addComponent(findField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(foundLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(filterLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(filterField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         jSplitPane1.setRightComponent(jPanel1);
@@ -365,7 +404,7 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 606, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -742,12 +781,29 @@ public class PatbaseAlertTableFrame extends javax.swing.JFrame {
         foundLabel.setText(Integer.toString(foundCount));
     }//GEN-LAST:event_findFieldActionPerformed
 
+    private void filterFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filterFieldActionPerformed
+        RowFilter<TableModel, Object> rf;
+        //If current expression doesn't parse, don't update.
+        try {
+            rf = RowFilter.regexFilter("(?i)" + filterField.getText());
+        } catch (java.util.regex.PatternSyntaxException e) {
+            System.out.println("*** RowFilter ***");
+            return;
+        }
+        sorter.setRowFilter(rf);
+        filterLabel.setText(Integer.toString(jTable1.getRowCount())
+                    + "/" + Integer.toString(tableModel.getRowCount()));
+    }//GEN-LAST:event_filterFieldActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem deselectMenuItem;
+    private javax.swing.JTextField filterField;
+    private javax.swing.JLabel filterLabel;
     private javax.swing.JTextField findField;
     private javax.swing.JLabel foundLabel;
     private javax.swing.JEditorPane jEditorPane1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;

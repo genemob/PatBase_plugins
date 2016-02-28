@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.StringTokenizer;
@@ -154,20 +155,34 @@ X-CDN: Incapsula
                     s = s.substring(s.indexOf("{"), s.length());
                     jOb = new JSONObject(s);
                 }
+            } catch (SocketException sx) {
+                //Sanofi firewall - java.net.SocketException: Connection reset
+                System.out.println("PatbaseRestClient.getResponseData: " + sx);
+                return rerunMethod();
             } catch (Exception x) {
                 System.out.println("PatbaseRestClient.getResponseData: " + x);
+                return null;
             }
         }        
         return jOb;
     }
     
+    static HttpGet httpGet;
+    private static JSONObject rerunMethod() {
+        System.out.println("RErunning: " + httpGet);
+        JSONObject jOb = null;
+        try {
+            HttpResponse httpResponse = httpclient.execute(httpGet);
+            jOb = getResponseData(httpResponse);
+        } catch (Exception ex) {
+            System.out.println("RErunMethod: " + ex);
+        }
+        return jOb;        
+    }
     public static JSONObject runMethod(String method, NameValuePair... params) {
         JSONObject jOb = null;
         try {
-//            URI uri = getUri(method, params);
-//            System.out.println(uri.toString());
-            
-            HttpGet httpGet = new HttpGet(getUri(method, params));
+            httpGet = new HttpGet(getUri(method, params));
             HttpResponse httpResponse = httpclient.execute(httpGet);
             jOb = getResponseData(httpResponse);
         } catch (Exception ex) {

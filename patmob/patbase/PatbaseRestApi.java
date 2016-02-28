@@ -20,26 +20,6 @@ public class PatbaseRestApi extends PatbaseRestClient{
     public static final String GETMEMBER = "GetMember";
     public static final String GETFAMILY = "GetFamily";
     
-//    public static Object[][] tableQuery(String query, String from, String to) {
-//System.out.println(query +" :: "+ from +" :: "+ to);
-//        Object[][] result;
-//        JSONObject jOb = query(query, from, to, null);
-//        JSONArray famArray = jOb.getJSONArray("Families");
-//        result = new Object[famArray.length()][];
-//        for (int i=0; i<famArray.length(); i++) {
-//            JSONObject o = famArray.getJSONObject(i);
-//            result[i] = new Object[]{
-//                false,
-//                o.getString("Title"),
-//                o.getString("ProbableAssignee"),
-//                o.getString("EarliestPubDate"),
-//                o.getString("PatentNumber"),
-//                o.getString("Abstract")
-//            };
-//        }
-//        return result;
-//    }
-
     /**
      * Run the query, get the QueryKey, and retrieve desired number of hits.
      * @param query
@@ -72,8 +52,9 @@ public class PatbaseRestApi extends PatbaseRestClient{
             } else {
                 jOb=null;
             }
-        } catch (JSONException | NumberFormatException x) {
+        } catch (Exception x) {
             System.out.println("PatbaseRestApi.query: " + x);
+            return null;
         }
         return jOb;
     }
