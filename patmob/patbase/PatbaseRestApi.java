@@ -1,15 +1,29 @@
 package patmob.patbase;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.SocketException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.patmob.core.HttpClient;
 
 /**
  *
  * @author Piotr
  */
-public class PatbaseRestApi extends PatbaseRestClient{
+public class PatbaseRestApi {
     public static final String GETWEEK = "GetWeek";
     public static final String GETMONTH = "GetMonth";
     public static final String QUERY = "Query";
@@ -19,6 +33,158 @@ public class PatbaseRestApi extends PatbaseRestClient{
     public static final String GETRECORD = "GetRecord";
     public static final String GETMEMBER = "GetMember";
     public static final String GETFAMILY = "GetFamily";
+    public static final String GETFAMILYLS = "GetFamilyLegalStatus";
+    
+//    *** PatbaseRestClient ***
+// <editor-fold defaultstate="collapsed" desc="PatbaseRestClient">    
+    static CloseableHttpClient httpclient;
+    static String userID, password;
+    static URIBuilder uriBuilder;
+    static String scheme = "https",     //params for uriBuilder
+            host = "www.patbase.com",
+            path = "/rest/api.php";
+    public static boolean isInitialized = false;
+           
+    public static String initialize(String patmobProxy, 
+            String patbaseUserId, String patbasePassword) {
+        String patbaseConnStatus;
+        userID = patbaseUserId;
+        password = patbasePassword;
+        httpclient = HttpClient.getInstance();
+        uriBuilder = new URIBuilder()
+                .setScheme(scheme)
+                .setHost(host)
+                .setPath(path);
+        
+        HttpGet httpGet = new HttpGet(getUri("login",
+                new BasicNameValuePair("userid", userID),
+                new BasicNameValuePair("password", password)));
+        try {
+            HttpResponse httpResponse = httpclient.execute(httpGet);
+            patbaseConnStatus = httpResponse.getStatusLine().toString();
+            
+            if (httpResponse.getStatusLine().getStatusCode()==200) {
+                patbaseConnStatus = handleInitResponse(httpResponse);
+            } else {
+                System.out.println("PatbaseRestClient.initialize status: " +
+                        httpResponse.getStatusLine());
+            }
+        } catch (IOException ex) {
+            patbaseConnStatus = ex.toString();
+        }
+        return patbaseConnStatus;
+    }
+    
+    private static String handleInitResponse(HttpResponse httpResponse) {
+        String status = "Null response";
+        JSONObject jOb = getResponseData(httpResponse);
+        if (jOb!=null) {
+            if (jOb.has("LOGIN_TO_API") && 
+                    jOb.getString("LOGIN_TO_API").equals("OK")) {
+                isInitialized = true;
+            }
+            status = jOb.toString();
+        }
+        return status;
+
+// <editor-fold defaultstate="collapsed" desc="PatBase cookies">
+        /*
+        Header[] headers = httpResponse.getAllHeaders();
+        for (Header h : headers) System.out.println(h.getName() + ": " + h.getValue());
+Cache-Control: no-cache, must-revalidate
+Content-Type: application/json; charset=utf-8
+Expires: Sat, 26 Jul 1997 05:00:00 GMT
+Server: Microsoft-IIS/6.0
+Version memcacheCOM: 07062011 16:36
+X-Powered-By: PHP/5.4.17
+Set-Cookie: SessionFarm_GUID=%7B2BF3B796-92F2-4578-862F-E9FB97CA9655%7D
+X-Powered-By: ASP.NET
+Date: Sat, 09 May 2015 22:04:39 GMT
+Connection: close
+OGHopCount: 1
+Set-Cookie: OGSession=2114025707; path=/
+Set-Cookie: visid_incap_9867=UQwH/IOrRmaFsvC3oxo3X3WETlUAAAAAQUIPAAAAAABsLH1Gio514LSoac7GOznk; expires=Mon, 08 May 2017 14:12:30 GMT; path=/; Domain=.patbase.com
+Set-Cookie: nlbi_9867=TVo5XBa7yhRY+I+irjd4awAAAABKSd0W/Y1Nem4/yzIHP3rG; path=/; Domain=.patbase.com
+Set-Cookie: incap_ses_221_9867=0mplUaTn0RiS52Sk8iYRA3aETlUAAAAAmnjkq4B7yPhR26fL1RIKGQ==; path=/; Domain=.patbase.com
+X-Iinfo: 10-176778394-176778505 NNNN CT(82 249 0) RT(1431209076890 201) q(0 0 4 0) r(4 11) U5
+X-CDN: Incapsula        
+        // org.apache.http.client.protocol.ResponseProcessCookies
+        // Response interceptor that populates the current CookieStore 
+        // with data contained in response cookies received in the given the HTTP response.
+        */// </editor-fold>
+    }
+    
+    public static JSONObject getResponseData(HttpResponse httpResponse) {
+        JSONObject jOb = null;
+        HttpEntity resultEntity = httpResponse.getEntity();
+        if (resultEntity!=null) {
+            try {
+                StringBuilder sb = new StringBuilder();
+                try (InputStream is = resultEntity.getContent()) {
+                    BufferedReader br = new BufferedReader(
+                            new InputStreamReader(is));
+                    String line;
+                    while ((line=br.readLine())!=null) {
+                        sb.append(line);
+                    }
+                    String s = sb.toString();
+                    //PatBase crap (?)
+                    s = s.substring(s.indexOf("{"), s.length());
+                    jOb = new JSONObject(s);
+                }
+            } catch (SocketException sx) {
+                //Sanofi firewall - java.net.SocketException: Connection reset
+                System.out.println("PatbaseRestClient.getResponseData: " + sx);
+                return rerunMethod();
+            } catch (Exception x) {
+                System.out.println("PatbaseRestClient.getResponseData: " + x);
+                return null;
+            }
+        }        
+        return jOb;
+    }
+    
+    static HttpGet httpGet;
+    private static JSONObject rerunMethod() {
+        System.out.println("RErunning: " + httpGet);
+        JSONObject jOb = null;
+        try {
+            HttpResponse httpResponse = httpclient.execute(httpGet);
+            jOb = getResponseData(httpResponse);
+        } catch (Exception ex) {
+            System.out.println("RErunMethod: " + ex);
+        }
+        return jOb;        
+    }
+    public static JSONObject runMethod(String method, NameValuePair... params) {
+        JSONObject jOb = null;
+        try {
+            httpGet = new HttpGet(getUri(method, params));
+            HttpResponse httpResponse = httpclient.execute(httpGet);
+            jOb = getResponseData(httpResponse);
+        } catch (Exception ex) {
+            System.out.println("runMethod: " + ex);
+        }
+        return jOb;
+    }
+    
+    public static URI getUri(String method, NameValuePair... params) {
+        URI uri = null;
+        uriBuilder.removeQuery().setParameter("method", method);
+        if (params!=null) {
+            for (NameValuePair param : params) {
+                uriBuilder.setParameter(param.getName(), param.getValue());
+            }
+        }
+        try {
+            uri = uriBuilder.build();
+        } catch (URISyntaxException ex) {
+            System.out.println("PatbaseRestClient.getUri: " + ex);
+        }
+        return uri;
+    }
+// </editor-fold>
+//    *** END PatbaseRestClient ***
     
     /**
      * Run the query, get the QueryKey, and retrieve desired number of hits.

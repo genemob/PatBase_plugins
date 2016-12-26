@@ -36,6 +36,10 @@ public class PatbaseRestPlugin implements PatmobPlugin {
         return "PatBase REST API Plug-in";
     }
 
+    /**
+     * This plug-in runs the weekly patent alerts on 70+ protein and disease 
+     * targets and tabulates results in a HTML table. Also some free query.
+     */
     @Override
     public void doJob() {
         showGui();

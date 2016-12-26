@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
-import static patmob.patbase.PatbaseRestClient.getResponseData;
-import static patmob.patbase.PatbaseRestClient.httpclient;
+import org.patmob.core.HttpClient;
 import patmob.util.CredentialsDialog;
 
 /**
@@ -33,7 +33,7 @@ public class MethodDemo extends javax.swing.JFrame {
 //                "piotr.masiakowski@sanofi.com", "ip4638"));
         
         String[] creds = CredentialsDialog.getCredentials();
-        jTextArea1.setText(PatbaseRestClient.initialize(patmobProxy, 
+        jTextArea1.setText(PatbaseRestApi.initialize(patmobProxy, 
                 creds[0], creds[1]));
     }
 
@@ -161,12 +161,13 @@ public class MethodDemo extends javax.swing.JFrame {
                     }
                 }
 
-                httpGet = new HttpGet(PatbaseRestClient.getUri(
+                httpGet = new HttpGet(PatbaseRestApi.getUri(
                         jList1.getSelectedValue().toString(),
                         params.toArray(new NameValuePair[0])));
                 //interesting import!!
+                CloseableHttpClient httpclient = HttpClient.getInstance();
                 HttpResponse httpResponse = httpclient.execute(httpGet);
-                JSONObject jOb = getResponseData(httpResponse);
+                JSONObject jOb = PatbaseRestApi.getResponseData(httpResponse);
                 jTextArea1.setText(jOb.toString(4));
             } catch (Exception x) {
                 System.out.println("Execute method: " + x);
