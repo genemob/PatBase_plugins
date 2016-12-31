@@ -29,12 +29,12 @@ public class MethodDemo extends javax.swing.JFrame {
     public MethodDemo(String patmobProxy) {
         initComponents();
         jTable1.getColumn("Parameter").setMaxWidth(100);
-//        jTextArea1.setText(PatbaseRestClient.initialize(patmobProxy, 
-//                "piotr.masiakowski@sanofi.com", "ip4638"));
         
-        String[] creds = CredentialsDialog.getCredentials();
-        jTextArea1.setText(PatbaseRestApi.initialize(patmobProxy, 
-                creds[0], creds[1]));
+        if (!PatbaseRestApi.isInitialized) {
+            String[] creds = CredentialsDialog.getCredentials();
+            jTextArea1.setText(PatbaseRestApi.initialize(patmobProxy, 
+                    creds[0], creds[1]));
+        }
     }
 
     /**

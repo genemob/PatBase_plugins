@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package patmob.patbase.monitor;
 
 import java.io.BufferedReader;
@@ -24,13 +19,44 @@ import patmob.patbase.table.PatbaseAlertTableFrame;
  */
 public class MonitorFrame_1 extends javax.swing.JFrame {
     PatbaseMonitorPlugin plugin;
+    TableModel tableModel;
 
     /**
      * Creates new form MonitorFrame_1
+     * @param pmp
+     * @param model
      */
-    public MonitorFrame_1(PatbaseMonitorPlugin pmp) {
+    public MonitorFrame_1(PatbaseMonitorPlugin pmp, TableModel model) {
         plugin = pmp;
+        tableModel = model;
         initComponents();
+        jTable1.getSelectionModel()
+                .addListSelectionListener(new MonitorSelectionListener());
+    }
+    
+    private class MonitorSelectionListener implements ListSelectionListener {
+        @Override
+        public void valueChanged(ListSelectionEvent e) {
+            if (!e.getValueIsAdjusting()) {
+                int viewRow = jTable1.getSelectedRow();
+                if (viewRow>=0) {
+                    int modelRow = jTable1.convertRowIndexToModel(viewRow);
+                    JSONObject pbFam = plugin.monitorProject
+                            .getJSONArray("Families").getJSONObject(modelRow);
+                            pbFam.getString("Family");
+                    JSONObject fullFamily = plugin.annotatedFamilies
+                            .get(pbFam.getString("Family"));
+                    if (fullFamily!=null) {
+                        FilterViewer fv = new MonitorFilterViewer(
+                                newLegalStatusTextArea,
+                                newPublicationsTextArea,
+                                pairBulkDataTextArea,
+                                rawJsonTextArea);
+                        fv.display(fullFamily);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -44,9 +70,7 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
 
         jPanel1 = new javax.swing.JPanel();
         jSplitPane1 = new javax.swing.JSplitPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
+        displayTabbedPane = new javax.swing.JTabbedPane();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         newPublicationsTextArea = new javax.swing.JTextArea();
@@ -56,6 +80,14 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel4 = new javax.swing.JPanel();
         jScrollPane4 = new javax.swing.JScrollPane();
         pairBulkDataTextArea = new javax.swing.JTextArea();
+        jPanel7 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        rawJsonTextArea = new javax.swing.JTextArea();
+        jTabbedPane2 = new javax.swing.JTabbedPane();
+        jPanel5 = new javax.swing.JPanel();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
+        jPanel6 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
@@ -66,24 +98,11 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("PatMOb: New Publications/Legal Status Monitor");
 
+        jSplitPane1.setDividerLocation(0.4);
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
-
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        jScrollPane1.setViewportView(jTable1);
-
-        jSplitPane1.setTopComponent(jScrollPane1);
 
         newPublicationsTextArea.setColumns(20);
         newPublicationsTextArea.setRows(5);
@@ -93,14 +112,14 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 447, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("New Publications", jPanel2);
+        displayTabbedPane.addTab("New Publications", jPanel2);
 
         newLegalStatusTextArea.setColumns(20);
         newLegalStatusTextArea.setRows(5);
@@ -110,14 +129,14 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 447, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("New Legal Status", jPanel3);
+        displayTabbedPane.addTab("New Legal Status", jPanel3);
 
         pairBulkDataTextArea.setColumns(20);
         pairBulkDataTextArea.setRows(5);
@@ -127,16 +146,64 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 447, Short.MAX_VALUE)
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("PAIR Bulk Data Status Test", jPanel4);
+        displayTabbedPane.addTab("PAIR Bulk Data Status Test", jPanel4);
 
-        jSplitPane1.setRightComponent(jTabbedPane1);
+        rawJsonTextArea.setColumns(20);
+        rawJsonTextArea.setRows(5);
+        jScrollPane1.setViewportView(rawJsonTextArea);
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
+        );
+
+        displayTabbedPane.addTab("Raw JSON", jPanel7);
+
+        jSplitPane1.setRightComponent(displayTabbedPane);
+
+        jTable1.setModel(tableModel);
+        jScrollPane5.setViewportView(jTable1);
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 49, Short.MAX_VALUE)
+        );
+
+        jTabbedPane2.addTab("Monitor Table", jPanel5);
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 472, Short.MAX_VALUE)
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 49, Short.MAX_VALUE)
+        );
+
+        jTabbedPane2.addTab("Profiles", jPanel6);
+
+        jSplitPane1.setLeftComponent(jTabbedPane2);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -146,7 +213,7 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
+            .addComponent(jSplitPane1)
         );
 
         jLabel1.setText("Dates from:");
@@ -217,114 +284,15 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        // TODO add your handling code here:
-        //LOAD DATA FROM TAB SEPARATED TXT FILE
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"));
-        int returnVal = chooser.showOpenDialog(this);
-        if(returnVal == javax.swing.JFileChooser.APPROVE_OPTION) {
-            // load this file in jTable1
-            ArrayList<String[]> al = null;
-            try {
-                try (BufferedReader br = new BufferedReader( 
-                             new FileReader(chooser.getSelectedFile()))) {
-                    String line;
-                    al = new ArrayList();
-                    while ((line=br.readLine())!=null) {
-                        String[] row = line.split("\t");
-                        al.add(row);
-                    }
-                }
-                TableModel tableModel = new javax.swing.table.DefaultTableModel(
-                        al.subList(1, al.size()).toArray(new String[0][0]),
-                        al.get(0));
-                jTable1.setModel(tableModel);
-                
-                jTable1.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (!e.getValueIsAdjusting()) {
-                            int viewRow = jTable1.getSelectedRow();
-                            if (viewRow>=0) {
-                                int modelRow = jTable1.convertRowIndexToModel(viewRow);
-                                String patbaseFN = (String) jTable1.getValueAt(modelRow, 1);
-                                JSONObject pbFam = plugin.annotatedFamilies.get(patbaseFN);
-System.out.println(pbFam);
-                                newLegalStatusTextArea.setText(pbFam.getJSONArray("New Legal Status").toString(2));
-                                newPublicationsTextArea.setText(pbFam.getJSONArray("New Publications").toString(2));
-                                pairBulkDataTextArea.setText(pbFam.getJSONArray("PAIR Bulk Data").toString(2));
-                            } else {        // selected row hidden by filter?
-                                ;                   
-                            }
-                        }
-                    }
-                });                
-                jScrollPane1.setViewportView(jTable1);                
-            }catch(Exception ex){
-                System.out.println("jMenuItem1ActionPerformed: " + ex);
-            }
-
-        }
-        
+        //delete?
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-        String params[] = new String[3];
-        params[0] = getPNs();
-        params[1] = jTextField1.getText();
-        params[2] = jTextField2.getText();;
-        plugin.runAlert(params);
+        plugin.runAlert();
     }//GEN-LAST:event_jButton1ActionPerformed
 
-        private String getPNs() {
-//        StringTokenizer st = new StringTokenizer(s);
-        StringBuilder sb = new StringBuilder("PN=(");
-        for (int i=0; i<jTable1.getRowCount(); i++) {
-            sb.append((String) jTable1.getValueAt(i, 0) + " OR ");
-        }
-//        while (st.hasMoreTokens()) {
-//            sb.append(st.nextToken() + " OR ");
-//        }
-        return sb.substring(0, sb.length()-5) + ")";
-    }
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MonitorFrame_1.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MonitorFrame_1.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MonitorFrame_1.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MonitorFrame_1.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new MonitorFrame_1(null).setVisible(true);
-            }
-        });
-    }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTabbedPane displayTabbedPane;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -336,17 +304,22 @@ System.out.println(pbFam);
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JSplitPane jSplitPane1;
-    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextArea newLegalStatusTextArea;
     private javax.swing.JTextArea newPublicationsTextArea;
     private javax.swing.JTextArea pairBulkDataTextArea;
+    private javax.swing.JTextArea rawJsonTextArea;
     // End of variables declaration//GEN-END:variables
 }

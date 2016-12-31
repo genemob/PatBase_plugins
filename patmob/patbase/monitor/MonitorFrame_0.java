@@ -124,7 +124,7 @@ public class MonitorFrame_0 extends javax.swing.JFrame {
         params[0] = getPNs(jTextArea1.getText());
         params[1] = jTextField1.getText();
         params[2] = jTextField2.getText();;
-        plugin.runAlert(params);
+        plugin.runAlert();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private String getPNs(String s) {

@@ -1,9 +1,11 @@
 package patmob.patbase.monitor;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
-import org.apache.http.message.BasicNameValuePair;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.TableModel;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import patmob.core.PatmobPlugin;
@@ -11,10 +13,23 @@ import patmob.patbase.PatbaseRestApi;
 
 /**
  *
- * @author nm54935
+ * @author Piotr
  */
 public class PatbaseMonitorPlugin implements PatmobPlugin {
+    /**
+     * monitorProject: JSONObject with a JSONArray in the field "Families"
+     * JSONArray consists of JSONObjects{"Pub Number","Family","Keywords"}
+     * from a tab-separated values txt file.
+     */
+    JSONObject monitorProject = null;
+    /**
+     * annotatedFamilies: full current family data from PatBase API.
+     *  key: family id String
+     *  value: PatBase patent family JSONObject created and 
+     *         annotated by the AlertRunner thread
+     */
     HashMap<String, JSONObject> annotatedFamilies = new HashMap();
+    boolean stopAlerts = false;
 
     @Override
     public String getName() {
@@ -23,115 +38,95 @@ public class PatbaseMonitorPlugin implements PatmobPlugin {
 
     @Override
     public void doJob() {
-        
-//        org.patmob.core.table.TableFrame.main(new String[0]);
-        
-        System.out.println(PatbaseRestApi.initialize(coreAccess.getController()
-                .getPatmobProperty("patmobProxy"),
-                "patbase_api@sanofi.com", "4uhHab4Hz"));
+        if (!PatbaseRestApi.isInitialized) {
+            System.out.println("monitor init: " + PatbaseRestApi.initialize(
+                    coreAccess.getController().getPatmobProperty("patmobProxy"),
+                    "patbase_api@sanofi.com", "4uhHab4Hz"));
+        }
         showGui();
     }
-    
-    
-    private void showGui() {
+
+   private void showGui() {
+        TableModel model = getCustomModel();
+        if (model == null) {
+            System.out.println("PatbaseMonitorPlugin - NULL model");
+            return;
+        }
+
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-//                new MonitorFrame_0(PatbaseMonitorPlugin.this).setVisible(true);
-                new MonitorFrame_1(PatbaseMonitorPlugin.this).setVisible(true);
+                new MonitorFrame_1(PatbaseMonitorPlugin.this, model)
+                        .setVisible(true);
             }
-        });        
+        });
+    }
+
+    private TableModel getCustomModel() {
+        //LOAD DATA FROM TAB SEPARATED TXT FILE
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"));
+        int returnVal = chooser.showOpenDialog(null);
+        if (returnVal == javax.swing.JFileChooser.APPROVE_OPTION) {
+            // load this file in jTable1
+            JSONArray families = new JSONArray();
+            try {
+                try (BufferedReader br = new BufferedReader(
+                        new FileReader(chooser.getSelectedFile()))) {
+                    String line;
+                    monitorProject = new JSONObject();
+                    monitorProject.put("Families", families);
+                    while ((line = br.readLine()) != null) {
+                        String[] row = line.split("\t");
+                        monitorProject.getJSONArray("Families")
+                                .put(new JSONObject()
+                                        .put("Pub Number", row[0])
+                                        .put("Family", row[1])
+                                        .put("Keywords", row[2]));
+                    }
+                }
+            } catch (Exception x) {
+                System.out.println("PatbaseMonitorPlugin.getCustomModel: " + x);
+            }
+        }
+        return new MonitorTableModel(monitorProject);
+    }
+
+    private class AlertRunner implements Runnable {
+        String query;
+        
+        public AlertRunner(String q) {
+            query = q;
+        }
+        
+        @Override
+        public void run() {
+            JSONObject pResult = PatbaseRestApi.query(query,
+                    PatbaseRestApi.SEARCHRESULTSBIB, "1", null, "2", "test");
+            JSONArray origFamilies = pResult.getJSONArray("Families");
+            for (int i=0; i<origFamilies.length(); i++) {
+                JSONObject family = origFamilies.getJSONObject(i);
+                annotatedFamilies.put(family.getString("Family"), family);
+            }
+        }
     }
     
-    public void runAlert(String params[]) {
-        // params[0] - PNs
-        // params[1] - date from
-        // params[2] - date to
-        
-        System.out.println("Running alert...");
-        //retrieve all patent families
-        String pQuery = "(" + params[0] + ")";
-System.out.println("pQuery: " + pQuery);        
-        JSONObject pResult = PatbaseRestApi.query(pQuery, 
-                PatbaseRestApi.SEARCHRESULTSBIB, "1", null, "2", "test");
-//System.out.println("pResult: " + pResult);                
-        JSONArray origFamilies = pResult.getJSONArray("Families");
-//                annotatedFamilies = new JSONArray();
-        // ANNOTATED FAMILIES???
-
-        
-        
-        String[] fieldsToCopy = new String[]{"Family", "ProbableAssignee",
-                                             "Title", "Abstract"};
-        for (int i=0; i<origFamilies.length(); i++) {
-            JSONObject origFamily = origFamilies.getJSONObject(i);
-            JSONObject smallCopy = new JSONObject(origFamily, fieldsToCopy);
-            
-            // keep all patent families, filter by length of arrays
-            smallCopy.put("New Publications", new JSONArray());
-            smallCopy.put("New Legal Status", new JSONArray());
-            smallCopy.put("PAIR Bulk Data", new JSONArray());
-            
-            JSONArray origPubs = origFamily.getJSONArray("Publications");
-            for (int j=0; j<origPubs.length(); j++) {
-                JSONObject origPub = origPubs.getJSONObject(j);
-                //check for country/pub date
-                if ((origPub.getString("PD").compareTo(params[1]))>=0 &&
-                        (origPub.getString("PD").compareTo(params[2]))<=0) {
-//System.out.println(origPub.getString("PN") + " :: " + origPub.getString("PD"));
-                    JSONArray newPubs = smallCopy.optJSONArray("New Publications");
-                    if (newPubs!=null) {
-                        newPubs.put(origPub);
-                    }
-                }
-                //collect US for PAIR Bulk data query
-                if (origPub.getString("CC").equals("US")) {
-                    JSONArray pairBulk = smallCopy.optJSONArray("PAIR Bulk Data");
-                    if (pairBulk!=null) {
-                        pairBulk.put(origPub.getString("PN"));
-                    }
-//                    System.out.println(origPub.getString("PN") + " for PAIR Bulk Data");
-                }
-            }
-            annotatedFamilies.put(smallCopy.getString("Family"), smallCopy);
-//                    put(smallCopy);
+    public void stopAlertRunner() {
+        stopAlerts = true;
+    }
+    
+    public void runAlert() {
+        //set up alert thread
+        StringBuilder sb = new StringBuilder("PN=(");
+        for (int i=0; i<monitorProject.getJSONArray("Families").length(); i++) {
+            sb.append(monitorProject.getJSONArray("Families")
+                    .getJSONObject(i).getString("Pub Number"))
+                    .append(" OR ");
         }
-        
-        
-        // Get the legal status
-System.out.println("now to LEGAL STATUS!");
-        Set<String> keys = annotatedFamilies.keySet();
-        Iterator<String> it = keys.iterator();
-        while (it.hasNext()) {
-            String familyID = it.next();
-            JSONObject patbaseFamily = annotatedFamilies.get(familyID);
-            
-            JSONObject jOb = PatbaseRestApi.runMethod((PatbaseRestApi.GETFAMILYLS), 
-                    new BasicNameValuePair("family", familyID));
-//            System.out.println(jOb.toString(2));
-            JSONArray legStati = jOb.getJSONArray("LegalStatus");
-            //all legal status objects for this family
-            for (int k=0; k<legStati.length(); k++) {
-                JSONObject legStatus = legStati.getJSONObject(k);
-                
-                if ((legStatus.getString("PRSDate").compareTo(params[1]))>=0 &&
-                        (legStatus.getString("PRSDate").compareTo(params[2]))<=0) {
-                    patbaseFamily.getJSONArray("New Legal Status").put(legStatus);
-                }
-            }
-
-System.out.println(familyID + ": " + patbaseFamily.toString(2));
-//Set<String> keys = annotatedFamilies.keySet();
-//for (String key -> annotatedFamilies) {
-//            
-//        }
-            
-//            System.out.println(patbaseFamily.getString("Family") + " :: "
-//                    + patbaseFamily.getString("Title"));
-//            System.out.println("New Publications:  " + patbaseFamily.getJSONArray("New Publications")
-//                    .toString(2));
-//            System.out.println("New Legal Status:  " + patbaseFamily.getJSONArray("New Legal Status")
-//                    .toString(2));
-        }
+        String pQuery = "(" + sb.substring(0, sb.length()-4) + ")" + ")";
+        System.out.println("pQuery: " + pQuery);
+        //start alert thread
+        AlertRunner alertRunner = new AlertRunner(pQuery);
+        new Thread(alertRunner).start();
     }
 }

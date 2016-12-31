@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -334,7 +335,7 @@ public class PatbaseRestPlugin implements PatmobPlugin {
     
     private void showGui() {
         frame = new PatbaseQueryFrame(PatbaseRestPlugin.this);
-        frame.setLogText("Sending HTTP POST request to PatBase API...");
+//        frame.setLogText("Sending HTTP POST request to PatBase API...");
         frame.setQueryFileField(coreAccess.getController()
                 .getPatmobProperty("patbaseAlertQueriesFile"));
         frame.setVisible(true);
@@ -373,26 +374,25 @@ public class PatbaseRestPlugin implements PatmobPlugin {
                 } catch (FileNotFoundException ex) {
                     System.out.println("supress warnings: " + ex);
                 }
-                frame.setLogText(PatbaseRestApi.initialize(
-                        coreAccess.getController().getPatmobProperty("patmobProxy"),
-//                        "piotr.masiakowski@sanofi.com", "ip4638"));
-                        "patbase_api@sanofi.com", "4uhHab4Hz"));
-                if (PatbaseRestApi.isInitialized) {
-                    JSONObject jOb = PatbaseRestApi.runMethod(
-                            PatbaseRestApi.GETWEEK, null);
-                    if (jOb!=null) {
+                if (!PatbaseRestApi.isInitialized) {
+                    frame.setLogText(PatbaseRestApi.initialize(
+                            coreAccess.getController().getPatmobProperty("patmobProxy"),
+    //                        "piotr.masiakowski@sanofi.com", "ip4638"));
+                            "patbase_api@sanofi.com", "4uhHab4Hz"));
+                }
+                JSONObject jOb = PatbaseRestApi.runMethod(
+                        PatbaseRestApi.GETWEEK, (NameValuePair[]) null);
+                if (jOb!=null) {
 //                        patbaseWeek =  jOb.getString("Week");
 //                        frame.setPbWeekField(patbaseWeek);
 //                        frame.setUpdateCmdField(
 //                                "UE=" + patbaseWeek + "US or " +
 //                                "UE=" + patbaseWeek + "EP or " +
 //                                "UE=" + patbaseWeek + "WO");
-                        
-                        String currentWeek = jOb.getString("Week");
-                        frame.setPbWeekField(currentWeek);
-                        frame.setUpdateCmdField(currentWeek);
-                        
-                    }
+
+                    String currentWeek = jOb.getString("Week");
+                    frame.setPbWeekField(currentWeek);
+                    frame.setUpdateCmdField(currentWeek);
                 }
             }
         });
