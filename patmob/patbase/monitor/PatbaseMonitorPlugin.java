@@ -3,11 +3,14 @@ package patmob.patbase.monitor;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.patmob.pair.PairBulkDataApi;
 import patmob.core.PatmobPlugin;
 import patmob.patbase.PatbaseRestApi;
 
@@ -82,6 +85,11 @@ public class PatbaseMonitorPlugin implements PatmobPlugin {
                                 .put(new JSONObject()
                                         .put("Pub Number", row[0])
                                         .put("Family", row[1])
+                                        //TODO *2* Get family ids from PN query - NOT FROM USER
+                                //need the family id to link
+                                //JSONObject monitorProject and
+                                //HashMap<String, JSONObject> annotatedFamilies
+//                                        .put("Family", "na")
                                         .put("Keywords", row[2]));
                     }
                 }
@@ -101,12 +109,43 @@ public class PatbaseMonitorPlugin implements PatmobPlugin {
         
         @Override
         public void run() {
+            
+        // Retrieve ALL PatBase FAMILIES' BIBLIO DATA
             JSONObject pResult = PatbaseRestApi.query(query,
                     PatbaseRestApi.SEARCHRESULTSBIB, "1", null, "2", "test");
             JSONArray origFamilies = pResult.getJSONArray("Families");
             for (int i=0; i<origFamilies.length(); i++) {
                 JSONObject family = origFamilies.getJSONObject(i);
                 annotatedFamilies.put(family.getString("Family"), family);
+            }
+        // This is the new publications part - user can view it now
+        
+        // Get additional data for each family
+            Iterator<String> it = annotatedFamilies.keySet().iterator();
+            while (it.hasNext()) {
+                String familyId = it.next();
+                JSONObject patFam = annotatedFamilies.get(familyId);
+                // Get LEGAL STATUS from PatBase
+        
+                // Get the PAIR data for US publications
+                JSONArray publications = patFam.getJSONArray("Publications");
+                JSONObject requestApplications = new JSONObject();
+
+                for (int i=0; i<publications.length(); i++) {
+                    JSONObject publication = publications.getJSONObject(i);
+                    if (publication.getString("CC").equals("US") && 
+                            publication.getString("PN").length()>10) {
+                        String pNumber = publication.getString("PN"),
+                                appFormat = pNumber.substring(2,6) + "-0" +
+                                pNumber.substring(6);
+                                
+                    requestApplications.put(appFormat, "not available");
+                    }
+                }
+                JSONObject pairData = PairBulkDataApi.getApplicationData(requestApplications);
+                patFam.put("PairData", pairData);
+                
+                annotatedFamilies.put(familyId, patFam);
             }
         }
     }

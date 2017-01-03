@@ -1,17 +1,9 @@
 package patmob.patbase.monitor;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-import javax.swing.JFileChooser;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
 import org.json.JSONObject;
-import patmob.patbase.table.PatbaseAlertTableFrame;
 
 /**
  *
@@ -20,6 +12,7 @@ import patmob.patbase.table.PatbaseAlertTableFrame;
 public class MonitorFrame_1 extends javax.swing.JFrame {
     PatbaseMonitorPlugin plugin;
     TableModel tableModel;
+    MonitorFilterViewer filterViewer;
 
     /**
      * Creates new form MonitorFrame_1
@@ -32,6 +25,11 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         initComponents();
         jTable1.getSelectionModel()
                 .addListSelectionListener(new MonitorSelectionListener());
+        filterViewer = new MonitorFilterViewer(
+                newLegalStatusTextArea,
+                newPublicationsTextArea,
+                pairBulkDataTextArea,
+                rawJsonTextArea);
     }
     
     private class MonitorSelectionListener implements ListSelectionListener {
@@ -47,12 +45,7 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
                     JSONObject fullFamily = plugin.annotatedFamilies
                             .get(pbFam.getString("Family"));
                     if (fullFamily!=null) {
-                        FilterViewer fv = new MonitorFilterViewer(
-                                newLegalStatusTextArea,
-                                newPublicationsTextArea,
-                                pairBulkDataTextArea,
-                                rawJsonTextArea);
-                        fv.display(fullFamily);
+                        filterViewer.display(fullFamily);
                     }
                 }
             }
@@ -68,6 +61,8 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
+        buttonGroup2 = new javax.swing.ButtonGroup();
         jPanel1 = new javax.swing.JPanel();
         jSplitPane1 = new javax.swing.JSplitPane();
         displayTabbedPane = new javax.swing.JTabbedPane();
@@ -83,16 +78,24 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel7 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         rawJsonTextArea = new javax.swing.JTextArea();
-        jTabbedPane2 = new javax.swing.JTabbedPane();
+        setupTabbedPane = new javax.swing.JTabbedPane();
         jPanel5 = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
-        jPanel6 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
+        profilesPanel = new javax.swing.JPanel();
+        anyDateRadioButton = new javax.swing.JRadioButton();
+        defineDateRadioButton = new javax.swing.JRadioButton();
+        fromDateTextField = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
-        jTextField2 = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        toDateTextField = new javax.swing.JTextField();
+        jSeparator1 = new javax.swing.JSeparator();
+        jLabel1 = new javax.swing.JLabel();
+        profileNameTextField = new javax.swing.JTextField();
+        jSeparator2 = new javax.swing.JSeparator();
+        worldwideRadioButton = new javax.swing.JRadioButton();
+        definedCCsRadioButton = new javax.swing.JRadioButton();
+        definedCCsTextField = new javax.swing.JTextField();
+        runPLMonitorButton = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -101,7 +104,6 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("PatMOb: New Publications/Legal Status Monitor");
 
-        jSplitPane1.setDividerLocation(0.4);
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
         newPublicationsTextArea.setColumns(20);
@@ -112,11 +114,11 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
         );
 
         displayTabbedPane.addTab("New Publications", jPanel2);
@@ -129,11 +131,11 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
         );
 
         displayTabbedPane.addTab("New Legal Status", jPanel3);
@@ -146,14 +148,14 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
         );
 
-        displayTabbedPane.addTab("PAIR Bulk Data Status Test", jPanel4);
+        displayTabbedPane.addTab("PAIR Bulk Data Application Status", jPanel4);
 
         rawJsonTextArea.setColumns(20);
         rawJsonTextArea.setRows(5);
@@ -163,11 +165,11 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
         );
 
         displayTabbedPane.addTab("Raw JSON", jPanel7);
@@ -181,53 +183,139 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+            .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 49, Short.MAX_VALUE)
+            .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE)
         );
 
-        jTabbedPane2.addTab("Monitor Table", jPanel5);
+        setupTabbedPane.addTab("Monitor Table", jPanel5);
 
-        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
-        jPanel6.setLayout(jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 472, Short.MAX_VALUE)
+        buttonGroup1.add(anyDateRadioButton);
+        anyDateRadioButton.setSelected(true);
+        anyDateRadioButton.setText("Any date");
+        anyDateRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                anyDateRadioButtonActionPerformed(evt);
+            }
+        });
+
+        buttonGroup1.add(defineDateRadioButton);
+        defineDateRadioButton.setText("From");
+        defineDateRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                defineDateRadioButtonActionPerformed(evt);
+            }
+        });
+
+        fromDateTextField.setText("20161001");
+
+        jLabel2.setText("to");
+
+        toDateTextField.setText("20170115");
+
+        jLabel1.setText("Profile Name");
+
+        profileNameTextField.setText("Timmerbeil");
+
+        buttonGroup2.add(worldwideRadioButton);
+        worldwideRadioButton.setSelected(true);
+        worldwideRadioButton.setText("Worldwide");
+        worldwideRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                worldwideRadioButtonActionPerformed(evt);
+            }
+        });
+
+        buttonGroup2.add(definedCCsRadioButton);
+        definedCCsRadioButton.setText("Defined CCs");
+        definedCCsRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                definedCCsRadioButtonActionPerformed(evt);
+            }
+        });
+
+        definedCCsTextField.setText("US EP");
+
+        javax.swing.GroupLayout profilesPanelLayout = new javax.swing.GroupLayout(profilesPanel);
+        profilesPanel.setLayout(profilesPanelLayout);
+        profilesPanelLayout.setHorizontalGroup(
+            profilesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(profilesPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(profilesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSeparator1)
+                    .addGroup(profilesPanelLayout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(profileNameTextField))
+                    .addComponent(jSeparator2)
+                    .addGroup(profilesPanelLayout.createSequentialGroup()
+                        .addComponent(anyDateRadioButton)
+                        .addGap(18, 18, 18)
+                        .addComponent(defineDateRadioButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(fromDateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(toDateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 160, Short.MAX_VALUE))
+                    .addGroup(profilesPanelLayout.createSequentialGroup()
+                        .addComponent(worldwideRadioButton)
+                        .addGap(18, 18, 18)
+                        .addComponent(definedCCsRadioButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(definedCCsTextField)))
+                .addContainerGap())
         );
-        jPanel6Layout.setVerticalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 49, Short.MAX_VALUE)
+        profilesPanelLayout.setVerticalGroup(
+            profilesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(profilesPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(profilesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(profileNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 5, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(profilesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(toDateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(profilesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(anyDateRadioButton)
+                        .addComponent(defineDateRadioButton)
+                        .addComponent(fromDateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel2)))
+                .addGap(5, 5, 5)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 5, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(profilesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(worldwideRadioButton)
+                    .addComponent(definedCCsRadioButton)
+                    .addComponent(definedCCsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(111, Short.MAX_VALUE))
         );
 
-        jTabbedPane2.addTab("Profiles", jPanel6);
+        setupTabbedPane.addTab("Profiles", profilesPanel);
 
-        jSplitPane1.setLeftComponent(jTabbedPane2);
+        jSplitPane1.setLeftComponent(setupTabbedPane);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 521, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSplitPane1)
         );
 
-        jLabel1.setText("Dates from:");
-
-        jLabel2.setText("to:");
-
-        jTextField1.setText("20160701");
-
-        jTextField2.setText("20161015");
-
-        jButton1.setText("Run PL Alert");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        runPLMonitorButton.setText("Run PL Monitor");
+        runPLMonitorButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                runPLMonitorButtonActionPerformed(evt);
             }
         });
 
@@ -254,16 +342,8 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton1)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(runPLMonitorButton)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -271,12 +351,7 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton1))
+                .addComponent(runPLMonitorButton)
                 .addContainerGap())
         );
 
@@ -287,13 +362,37 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
         //delete?
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void runPLMonitorButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runPLMonitorButtonActionPerformed
         plugin.runAlert();
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_runPLMonitorButtonActionPerformed
+
+    private void worldwideRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_worldwideRadioButtonActionPerformed
+        filterViewer.setDisplayedCCs("");
+    }//GEN-LAST:event_worldwideRadioButtonActionPerformed
+
+    private void definedCCsRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_definedCCsRadioButtonActionPerformed
+        filterViewer.setDisplayedCCs(definedCCsTextField.getText());
+    }//GEN-LAST:event_definedCCsRadioButtonActionPerformed
+
+    private void defineDateRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_defineDateRadioButtonActionPerformed
+        filterViewer.setDateFrom(fromDateTextField.getText());
+        filterViewer.setDateTo(toDateTextField.getText());
+    }//GEN-LAST:event_defineDateRadioButtonActionPerformed
+
+    private void anyDateRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_anyDateRadioButtonActionPerformed
+        filterViewer.setDateFrom("");
+        filterViewer.setDateTo("");
+    }//GEN-LAST:event_anyDateRadioButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JRadioButton anyDateRadioButton;
+    private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.ButtonGroup buttonGroup2;
+    private javax.swing.JRadioButton defineDateRadioButton;
+    private javax.swing.JRadioButton definedCCsRadioButton;
+    private javax.swing.JTextField definedCCsTextField;
     private javax.swing.JTabbedPane displayTabbedPane;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JTextField fromDateTextField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JMenu jMenu1;
@@ -305,21 +404,25 @@ public class MonitorFrame_1 extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
-    private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
+    private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JSeparator jSeparator2;
     private javax.swing.JSplitPane jSplitPane1;
-    private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTable1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
     private javax.swing.JTextArea newLegalStatusTextArea;
     private javax.swing.JTextArea newPublicationsTextArea;
     private javax.swing.JTextArea pairBulkDataTextArea;
+    private javax.swing.JTextField profileNameTextField;
+    private javax.swing.JPanel profilesPanel;
     private javax.swing.JTextArea rawJsonTextArea;
+    private javax.swing.JButton runPLMonitorButton;
+    private javax.swing.JTabbedPane setupTabbedPane;
+    private javax.swing.JTextField toDateTextField;
+    private javax.swing.JRadioButton worldwideRadioButton;
     // End of variables declaration//GEN-END:variables
 }
